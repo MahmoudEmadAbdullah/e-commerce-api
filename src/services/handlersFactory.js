@@ -71,7 +71,7 @@ exports.deleteDocument = (Model) =>
  * @desc      Get a list of documents with filtering, searching, pagination, and sorting
  * @access    public
  */
-exports.getAllDocuments = (Model, modelName='') => 
+exports.getAllDocuments = (Model, modelName) => 
     asyncHandler(async (req, res, next) => {
         // Apply filtering conditions from middleware if set
         let filter = {};

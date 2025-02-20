@@ -48,7 +48,8 @@ exports.deleteUser = factoryHandler.deleteDocument(UserModel);
  */
 exports.updateUser = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    const user = await UserModel.findByIdAndUpdate(id ,
+    const user = await UserModel.findByIdAndUpdate(
+        id ,
         {
             name: req.body.name,
             slug: req.body.slug,
@@ -71,13 +72,16 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
  * @route     PUT /api/users/changePassword/:id
  * @access    private
  */
-exports.updateUserPassword = asyncHandler(async (req, res, next) => {
+exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     //Hashing password
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
     const user = await UserModel.findByIdAndUpdate(
         id ,
-        {password: hashedPassword},
+        {
+            password: hashedPassword,
+            passwordChangedAt: Date.now()
+        },
         {new: true, runValidators: true}
     );
     if(!user) {

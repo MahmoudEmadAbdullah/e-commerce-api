@@ -19,6 +19,7 @@ const {
 
 const subCategoryRoute = require('./subCategoryRoute');
 
+const routeProtector = require('../middlewares/routeProtector');
 const router = express.Router();
 
 
@@ -29,6 +30,8 @@ router
     .route('/')
     .get(getCategories)
     .post(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
         uploadCategoryImage, 
         resizeImage,
         createCategoryValidator, 
@@ -38,13 +41,23 @@ router
     
 router
     .route('/:id')
-    .get(getCategoryValidator, getCategory)
+    .get(
+        getCategoryValidator, 
+        getCategory
+    )
     .put(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
         uploadCategoryImage, 
         resizeImage,
         updateCategoryValidator,
         updateCategory
     )
-    .delete(deleteCategoryValidator, deleteCategory);
+    .delete(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
+        deleteCategoryValidator, 
+        deleteCategory
+    );
 
 module.exports = router;

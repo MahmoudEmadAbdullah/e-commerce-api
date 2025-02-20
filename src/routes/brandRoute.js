@@ -17,6 +17,7 @@ const {
     resizeImage
 } = require('../services/brandService');
 
+const routeProtector = require('../middlewares/routeProtector');
 const router = express.Router();
 
 
@@ -24,6 +25,8 @@ router
     .route('/')
     .get(getBrands)
     .post(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
         uploadBrandImage,
         resizeImage,
         createBrandValidator,
@@ -32,14 +35,24 @@ router
 
 router
     .route('/:id')
-    .get(getBrandValidator, getBrand)
+    .get(
+        getBrandValidator, 
+        getBrand
+    )
     .put(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
         uploadBrandImage,
         resizeImage,
         updateBrandValidator, 
         updateBrand
     )
-    .delete(deleteBrandValidator, deleteBrand);
+    .delete(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
+        deleteBrandValidator, 
+        deleteBrand
+    );
 
 
 module.exports = router;

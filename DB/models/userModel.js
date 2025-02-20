@@ -40,9 +40,13 @@ const userSchema = new mongoose.Schema(
                 message: "Password must include at least one uppercase letter, one lowercase letter, one number, and one special character"
             }
         },
+        passwordChangedAt: {
+            type: Date,
+        },
         phone: {
             type: String,
             unique: true,
+            sparse: true,
             validate: {
                 validator: (val) => {
                     return valid.isMobilePhone(val, ['ar-EG', 'ar-SA', 'ar-AE', 'en-US']);
@@ -63,12 +67,37 @@ const userSchema = new mongoose.Schema(
 );
 
 
-//Using pre middleware to hash the password before saving
+// Pre-save middleware to hash the password, but only on document creation
 userSchema.pre('save', async function(next) {
     if(!this.isModified('password')) return next();
 
     this.password = await bcrypt.hash(this.password, 10);
     next();
+});
+
+
+// Function to append the full URL to the image field if it exists
+const setProfileImageUrl = (doc) => {
+    if(doc.profileImage) {
+        const profileImageUrl = `${process.env.BASE_URL}/users/${doc.profileImage}`;
+        doc.profileImage = profileImageUrl;
+    }
+};
+
+/**
+ * Post 'init' middleware: Runs after retrieving a document from the database
+ * This applies when using findOne, findAll, or update operations
+ */
+userSchema.post('init', function(doc) {
+    setProfileImageUrl(doc);
+});
+
+/**
+ * Post 'save' middleware: Runs after creating a new document
+ * This applies when using create operations
+ */
+userSchema.post('save', function(doc){
+    setProfileImageUrl(doc)
 });
 
 

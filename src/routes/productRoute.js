@@ -17,6 +17,7 @@ const{
     resizeProductImages
 } = require('../services/productService');
 
+const routeProtector = require('../middlewares/routeProtector');
 const router = express.Router();
 
 
@@ -24,6 +25,8 @@ router
     .route('/')
     .get(getProducts)
     .post(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
         uploadProductImages,
         resizeProductImages,
         createProductValidator, 
@@ -32,14 +35,24 @@ router
 
 router
     .route('/:id')
-    .get(getProductValidator, getProduct)
+    .get(
+        getProductValidator, 
+        getProduct
+    )
     .put(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
         uploadProductImages,
         resizeProductImages,
         updateProductValidator, 
         updateProduct
     )
-    .delete(deleteProductValidator, deleteProduct);
+    .delete(
+        routeProtector.protect,
+        routeProtector.allowedTo('admin'),
+        deleteProductValidator, 
+        deleteProduct
+    );
 
     
 module.exports = router;

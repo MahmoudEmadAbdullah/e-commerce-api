@@ -117,7 +117,7 @@ exports.updateUserValidator = [
 ];
 
 
-exports.updateUserPasswordValidator = [
+exports.changeUserPasswordValidator = [
     check('id')
         .notEmpty().withMessage('User Id required')
         .isMongoId().withMessage('Invalid user Id format'),

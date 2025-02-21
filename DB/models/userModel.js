@@ -40,9 +40,10 @@ const userSchema = new mongoose.Schema(
                 message: "Password must include at least one uppercase letter, one lowercase letter, one number, and one special character"
             }
         },
-        passwordChangedAt: {
-            type: Date,
-        },
+        passwordChangedAt: Date,
+        passwordResetCode: String,
+        passwordResetExpires: Date,
+        passwordResetVerified: Boolean,
         phone: {
             type: String,
             unique: true,

@@ -2,24 +2,26 @@ const express = require('express');
 
 const { 
     signupValidator,
-    loginValidator
+    loginValidator,
+    forgotPasswordValidator,
+    resetPasswordValidator
 } = require('../validators/authValidator')
 
 const { 
     signup,
-    login
+    login,
+    forgotPassword,
+    verifyPasswordResetCode,
+    resetPassword
 } = require('../services/authService')
 
 const router = express.Router();
 
 
-router
-    .route('/signup')
-    .post(signupValidator, signup);
+router.post('/signup', signupValidator, signup);
+router.post('/login', loginValidator, login);
+router.post('/forgotPassword', forgotPasswordValidator, forgotPassword);
+router.post('/verifyResetCode', verifyPasswordResetCode);
+router.put('/resetPassword', resetPasswordValidator, resetPassword);    
 
-router
-    .route('/login')
-    .post(loginValidator, login);
-
-    
 module.exports = router;

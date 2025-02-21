@@ -58,12 +58,11 @@ exports.protect = asyncHandler(async (req, res, next) => {
 exports.allowedTo = (...roles) =>
     asyncHandler(async (req, res, next) => {
         //1- access roles ['user, 'admin]
+        //2- access registerd user by (req.user = currentUser) as (req.user.role)
         if(!roles.includes(req.user.role)) {
             return next(new ApiError(
                 'You are not allowed to access this route', 403)
             );
         }
         next();
-    //2- access registerd user by (req.user = currentUser) as (req.user.role)
-
 });

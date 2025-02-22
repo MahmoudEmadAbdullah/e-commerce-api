@@ -6,7 +6,8 @@ const bcrypt = require('bcrypt');
 const factoryHandler = require('./handlersFactory');
 const ApiError = require('../utils/apiError');
 const UserModel = require('../../DB/models/userModel');
-const { uploadSingleImage } = require('../middlewares/uploadImage')
+const generateToken = require('../utils/generateToken');
+const { uploadSingleImage } = require('../middlewares/uploadImage');
 
 
 /**
@@ -90,6 +91,92 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     res.status(200).json({data: user});
 });
 
+
+/**
+ * @desc      Get logged user data
+ * @route     GET /api/users/getMe
+ * @access    private
+ */
+exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
+    const user = await UserModel.findById(req.user._id)
+        .select('-password');
+    res.status(200).json({data: user});
+});
+
+
+/**
+ * @desc      Update logged user password
+ * @route     PUT /api/users/changeMyPassword
+ * @access    private
+ */
+exports.changeLoggedUserPassword = asyncHandler(async (req, res) => {
+    //Hashing password
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const user = await UserModel.findByIdAndUpdate(
+        req.user._id,
+        {
+            password: hashedPassword,
+            passwordChangedAt: Date.now(),
+        },
+        {new: true, runValidators: true}
+    );
+    const token = generateToken(user._id);
+    res.status(200).json({status: 'Success', token});
+});
+
+
+/**
+ * @desc      Update logged user data (without password)
+ * @route     PUT /api/users/updateMe
+ * @access    private
+ */
+exports.updateLoggedUserData = asyncHandler(async (req, res) => {
+    const user = await UserModel.findByIdAndUpdate(
+        req.user._id,
+        {
+            name: req.body.name,
+            email: req.body.email,
+            phone: req.body.phone,
+            profileImage: req.body.profileImage
+        },
+        {new: true, runValidators: true}
+    );
+    res.status(200).json({data: user});
+});
+
+
+/**
+ * @desc      Deactivate logged-in user's account
+ * @route     Delete /api/users/deactivateMe
+ * @access    private
+ */
+exports.deactivateLoggedUser  = asyncHandler(async (req, res) => {
+    await UserModel.findByIdAndUpdate(req.user._id, { active: false });
+    res.status(200).json({
+        status: 'Success',
+        message: 'Your account has been deactivated.'
+    });
+});
+
+
+/**
+ * @desc      Reactivate logged-in user's account
+ * @route     PATCH /api/users/reactivateMe
+ * @access    Private
+ */
+exports.reactiveLoggedUser = asyncHandler(async (req, res, next) => {
+    const user = await UserModel.findByIdAndUpdate(
+        req.user._id,
+        { active: true },
+        {new: true}
+    ).select('-password');
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Your account has been reactivated.',
+        data: user
+    });
+});
 
 //Upload single image
 exports.uploadUserImage = uploadSingleImage('profileImage');

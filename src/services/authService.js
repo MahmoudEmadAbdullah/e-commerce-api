@@ -1,5 +1,3 @@
-const crypto = require('crypto');
-
 const bcrypt = require('bcrypt');
 const asyncHandler = require('express-async-handler');
 

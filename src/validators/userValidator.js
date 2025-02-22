@@ -164,4 +164,69 @@ exports.deleteUserValidator = [
 ];
 
 
+exports.changeLoggedUserPasswordValidator = [
+    check('currentPassword')
+        .notEmpty().withMessage('You must enter your current password')
+        .custom(async (currentPassword, {req}) => {
+            const isCorrectPassword = await bcrypt.compare(req.body.currentPassword, req.user.password);
+            if(!isCorrectPassword) {
+                throw new Error('Incorrect current password');
+            }
+            return true;
+        }),
 
+    check('password')
+        .notEmpty()
+        .isLength({min: 8}).withMessage('Too short password')
+        .matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+        .withMessage('Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character'),
+        
+    check('passwordConfirm')
+        .notEmpty().withMessage('You must enter the password confirm')
+        .custom((confirmPassword, {req}) => {
+            if(req.body.password && confirmPassword !== req.body.password) {
+                throw new Error('Password confirmation does not match password');
+            }
+            return true;
+        }),
+
+    validatorMiddleware,    
+];
+
+
+exports.updateLoggedUserValidator = [
+    check('name')
+        .optional()
+        .trim()
+        .isLength({min: 3}).withMessage('Too short user name')
+        .isLength({max: 20}).withMessage('Too long user name')
+        .custom((val, {req}) => {
+            req.body.slug = slugify(val, {lower: true});
+            return true;
+        }),
+
+    check('email')
+        .optional()
+        .trim()
+        .normalizeEmail()
+        .isEmail().withMessage('Please enter a valid email address')
+        .custom(async(userEmail) => {
+            const user = await UserModel.findOne({email: userEmail});
+            if(user && user.id !== req.user._id) {
+                throw new Error(`Email already exists: ${userEmail}`)
+            }
+            return true;
+        }),
+
+    body('phone')
+        .optional()
+        .trim()
+        .isMobilePhone(['ar-EG', 'ar-SA', 'ar-AE', 'en-US'])
+        .withMessage('Please enter a valid mobile phone'),
+
+    body('profileImage')
+        .optional()
+        .isString().withMessage('Profile image must be string'),
+
+    validatorMiddleware,
+];

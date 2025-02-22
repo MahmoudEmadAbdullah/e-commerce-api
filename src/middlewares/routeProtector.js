@@ -23,11 +23,17 @@ exports.protect = asyncHandler(async (req, res, next) => {
     }
     //2- verify token (no changes happens, expired token)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    //3- check if user exists
+    //3- check if user exists and is active
     const currentUser = await UserModel.findById(decoded.userId);
     if(!currentUser) {
         return next(
-            new ApiError('The user that belong to this token does no longer exists', 401)
+            new ApiError('The user that belongs to this token does not exist', 401)
+        );
+    }
+    // Allow inactive users only for /reactivateMe route
+    if(currentUser.active === false && req.originalUrl !== '/api/users/reactivateMe') {
+        return next(
+            new ApiError('Your account is deactivated. Reactivate it to proceed.', 401)
         );
     }
     //4- check if user change his password after token created

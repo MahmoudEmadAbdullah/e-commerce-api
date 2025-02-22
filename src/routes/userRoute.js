@@ -5,7 +5,9 @@ const {
     createUserValidator,
     updateUserValidator,
     deleteUserValidator,
-    changeUserPasswordValidator
+    changeUserPasswordValidator,
+    changeLoggedUserPasswordValidator,
+    updateLoggedUserValidator
 } = require('../validators/userValidator');
 
 const {
@@ -15,6 +17,11 @@ const {
     updateUser,
     deleteUser,
     changeUserPassword,
+    getLoggedUserData,
+    changeLoggedUserPassword,
+    updateLoggedUserData,
+    deactivateLoggedUser,
+    reactiveLoggedUser,
     uploadUserImage,
     resizeUserImage
 } = require('../services/userService');
@@ -22,40 +29,47 @@ const {
 const routeProtector = require('../middlewares/routeProtector');
 const router = express.Router();
 
+
+//Logged User
+router.get('/getMe', routeProtector.protect, getLoggedUserData);
+
+router.put(
+    '/changeMyPassword', 
+    routeProtector.protect, 
+    changeLoggedUserPasswordValidator, 
+    changeLoggedUserPassword
+);
+
+router.put(
+    '/updateMe', 
+    routeProtector.protect, 
+    uploadUserImage,
+    resizeUserImage,
+    updateLoggedUserValidator, 
+    updateLoggedUserData
+);
+
+router.delete('/deactivateMe', routeProtector.protect, deactivateLoggedUser);
+router.patch('/reactivateMe', routeProtector.protect, reactiveLoggedUser);
+
+//Admin Only
+router.use(routeProtector.protect, routeProtector.allowedTo('admin'));
+
 router
     .route('/')
-    .get(
-        routeProtector.protect,
-        routeProtector.allowedTo('admin'),
-        getUsers
-    )
+    .get(getUsers)
     .post(
-        routeProtector.protect,
-        routeProtector.allowedTo('admin'),
         uploadUserImage,
         resizeUserImage,
         createUserValidator,
         createUser
-
     );
 
 router
     .route('/:id')
-    .get(
-        routeProtector.protect,
-        routeProtector.allowedTo('admin'),
-        getUser, 
-        getUserValidator
-    )
-    .delete(
-        routeProtector.protect,
-        routeProtector.allowedTo('admin'),
-        deleteUser, 
-        deleteUserValidator
-    )
+    .get(getUser, getUserValidator)
+    .delete(deleteUser, deleteUserValidator)
     .put(
-        routeProtector.protect,
-        routeProtector.allowedTo('admin'),
         uploadUserImage,
         resizeUserImage,
         updateUserValidator,
@@ -65,9 +79,9 @@ router
 
 router.put(
     '/changePassword/:id', 
-    routeProtector.protect,
     changeUserPasswordValidator, 
     changeUserPassword
 );
+
 
 module.exports = router;

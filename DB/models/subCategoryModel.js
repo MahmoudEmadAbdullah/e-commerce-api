@@ -28,7 +28,11 @@ const subCategorySchema = new mongoose.Schema(
 
 //Mongoose query middleware
 subCategorySchema.pre(/^find/, function(next){
-    this.populate({path: 'category', select: 'name-_id'});
+    const options = this.getOptions();
+    if(options.disableCategoryPopulation) {
+        return next();
+    }
+    this.populate({path: 'category', select: 'name -_id'});
     next();
 });
 

@@ -16,8 +16,8 @@ const {
     deleteSubCategory,
 } = require('../services/subCategoryService');
 
-const {assignCategoryIdToBody } = require('../middlewares/assignCategoryId');
-const { filterSubCategoriesByCategory } = require('../middlewares/filterSubCategories');
+const { assignIdsToBody  } = require('../middlewares/assignIdsToBody');
+const { setFilterObject } = require('../middlewares/setFilterObject');
 const routeProtector = require('../middlewares/routeProtector');
 
 const router = express.Router({mergeParams: true});
@@ -26,13 +26,13 @@ const router = express.Router({mergeParams: true});
 router
     .route('/')
     .get(
-        filterSubCategoriesByCategory, 
+        setFilterObject, 
         getSubCategories
     )
     .post(
         routeProtector.protect,
         routeProtector.allowedTo('admin'),
-        assignCategoryIdToBody, 
+        assignIdsToBody, 
         createSubCategoryValidator, 
         createSubCategory
     );

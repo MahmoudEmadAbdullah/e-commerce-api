@@ -23,6 +23,7 @@ const routeProtector = require('../middlewares/routeProtector');
 const router = express.Router();
 
 
+//Nested Route
 router.use('/:categoryId/subCategories', subCategoryRoute);
 
 

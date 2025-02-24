@@ -28,6 +28,13 @@ const reviewSchema = new mongoose.Schema(
 );
 
 
+// Mongoose query middleware
+reviewSchema.pre(/^find/, function(next) {
+    this.populate({path: 'user', select: 'name profileImag'});
+    next();
+});
+
+
 //Create model
 const ReviewModel = mongoose.model('Review', reviewSchema);
 

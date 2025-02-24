@@ -17,9 +17,13 @@ const{
     resizeProductImages
 } = require('../services/productService');
 
+const reviewRoute = require('../routes/reviewRoute');
+
 const routeProtector = require('../middlewares/routeProtector');
 const router = express.Router();
 
+//Nested Route
+router.use('/:productId/reviews', reviewRoute);
 
 router
     .route('/')

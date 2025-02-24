@@ -72,17 +72,34 @@ const productSchema = new mongoose.Schema(
             default: 0
         },
     }, 
-    {timestamps: true}
+    {
+        timestamps: true,
+        //To enable virtual populate
+        toObject: {virtuals: true},
+        toJSON: {virtuals: true}
+    }
 );
 
 
 // Mongoose query middleware
 productSchema.pre(/^find/, function(next) {
-    this.populate({path: 'category', select: 'name-_id'})
-        .populate({path: 'subcategories', select: 'name-_id' })
-        .populate({path: 'brand', select: 'name-_id'});
+    this.populate({path: 'category', select: 'name -_id'}) 
+        .populate({path: 'brand', select: 'name-_id'})
+        .populate({
+            path: 'subcategories', 
+            select: 'name -_id',
+            options: {disableCategoryPopulation: true}
+        }); 
         
     next();
+});
+
+
+//Virtual Populate
+productSchema.virtual('reviews', {
+    ref: 'Review',
+    localField: '_id',
+    foreignField: 'product'
 });
 
 

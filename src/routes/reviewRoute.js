@@ -15,16 +15,20 @@ const {
     deleteReview
 } = require('../services/reviewService');
 
+const { setFilterObject } = require('../middlewares/setFilterObject');
+const { assignIdsToBody } = require('../middlewares/assignIdsToBody');
+
 const routeProtector = require('../middlewares/routeProtector');
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 
 router
     .route('/')
-    .get(getReviews)
+    .get(setFilterObject, getReviews)
     .post(
         routeProtector.protect, 
         routeProtector.allowedTo('user'),
+        assignIdsToBody,
         createReviewValidator,
         createReview
     );
@@ -35,6 +39,7 @@ router
     .put(
         routeProtector.protect, 
         routeProtector.allowedTo('user'),
+        assignIdsToBody,
         updateReviewValidator,
         updateReview
     )

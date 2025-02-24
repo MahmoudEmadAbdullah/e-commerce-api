@@ -7,10 +7,16 @@ const ApiFeatures = require('../utils/apiFeatures');
  * @desc      Get specific document by ID
  * @access    public
  */
-exports.getDocument = (Model) => 
+exports.getDocument = (Model, populateOpt) => 
     asyncHandler(async (req, res, next) => {
         const { id } = req.params;
-        const document = await Model.findById(id);
+        //Build query
+        let query = Model.findById(id);
+        if(populateOpt){
+            query = query.populate(populateOpt);
+        }
+        //Execute query
+        const document = await query;
         if(!document){
             return next(new ApiError('No document found', 404));
         }

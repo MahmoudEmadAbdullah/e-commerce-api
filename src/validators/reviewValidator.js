@@ -73,7 +73,7 @@ exports.updateReviewValidator = [
                 throw new Error(`No review for this Id: ${review}`);
             }
             // Ensure that only the review creator can update it
-            if(review.user.toString() !== req.user._id.toString()) {
+            if(review.user._id.toString() !== req.user._id.toString()) {
                 throw new Error('You are not allowed to perform this action');
             }
             return true;

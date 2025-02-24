@@ -21,7 +21,7 @@ exports.getProducts = factoryHandler.getAllDocuments(ProductModel, 'products')
  * @route     GET /api/products/:id
  * @access    public
  */
-exports.getProduct = factoryHandler.getDocument(ProductModel);
+exports.getProduct = factoryHandler.getDocument(ProductModel, 'reviews');
 
 
 /**

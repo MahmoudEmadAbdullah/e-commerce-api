@@ -8,7 +8,14 @@ const UserModel = require('../../DB/models/userModel');
 
 exports.getUserValidator = [
     check('id')
-        .isMongoId().withMessage('Invalid user Id format'),
+        .isMongoId().withMessage('Invalid user Id format')
+        .custom(async (userId) => {
+            const user = await UserModel.findById(userId);
+            if(!user) {
+                throw new Error(`No user for this Id: ${userId}`);
+            }
+            return true;
+        }),
     
     validatorMiddleware,
 ];
@@ -74,7 +81,14 @@ exports.createUserValidator = [
 exports.updateUserValidator = [
     check('id')
         .notEmpty().withMessage('User Id required')
-        .isMongoId().withMessage('Invalid user Id format'),
+        .isMongoId().withMessage('Invalid user Id format')
+        .custom(async (userId) => {
+            const user = await UserModel.findById(userId);
+            if(!user) {
+                throw new Error(`No user for this Id: ${userId}`);
+            }
+            return true;
+        }),
 
     body('name')
         .optional()
@@ -120,7 +134,14 @@ exports.updateUserValidator = [
 exports.changeUserPasswordValidator = [
     check('id')
         .notEmpty().withMessage('User Id required')
-        .isMongoId().withMessage('Invalid user Id format'),
+        .isMongoId().withMessage('Invalid user Id format')
+        .custom(async (userId) => {
+            const user = await UserModel.findById(userId);
+            if(!user) {
+                throw new Error(`No user for this Id: ${userId}`);
+            }
+            return true;
+        }),
 
     body('currentPassword')
         .notEmpty().withMessage('You must enter your current password')
@@ -158,7 +179,14 @@ exports.changeUserPasswordValidator = [
 exports.deleteUserValidator = [
     check('id')
         .notEmpty().withMessage('User Id required')
-        .isMongoId().withMessage('Invalid user Id format'),
+        .isMongoId().withMessage('Invalid user Id format')
+        .custom(async (userId) => {
+            const user = await UserModel.findById(userId);
+            if(!user) {
+                throw new Error(`No user for this Id: ${userId}`);
+            }
+            return true;
+        }),
 
     validatorMiddleware,
 ];

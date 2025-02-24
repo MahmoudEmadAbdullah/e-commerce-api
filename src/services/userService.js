@@ -13,7 +13,7 @@ const { uploadSingleImage } = require('../middlewares/uploadImage');
 /**
  * @desc      Get list of users
  * @route     GET /api/users
- * @access    private
+ * @access    private/admin
  */
 exports.getUsers = factoryHandler.getAllDocuments(UserModel);
 
@@ -21,7 +21,7 @@ exports.getUsers = factoryHandler.getAllDocuments(UserModel);
 /**
  * @desc      Get specific user by Id
  * @route     GET /api/users/:id
- * @access    private
+ * @access    private/admin
  */
 exports.getUser = factoryHandler.getDocument(UserModel);
 
@@ -29,7 +29,7 @@ exports.getUser = factoryHandler.getDocument(UserModel);
 /**
  * @desc      Create user
  * @route     POST /api/users
- * @access    private
+ * @access    private/admin
  */
 exports.createUser = factoryHandler.createDocument(UserModel);
 
@@ -37,7 +37,7 @@ exports.createUser = factoryHandler.createDocument(UserModel);
 /**
  * @desc      Delete specific user
  * @route     DELETE /api/users/:id
- * @access    private
+ * @access    private/admin
  */
 exports.deleteUser = factoryHandler.deleteDocument(UserModel);
 
@@ -45,7 +45,7 @@ exports.deleteUser = factoryHandler.deleteDocument(UserModel);
 /**
  * @desc      Update specific user data except for the password
  * @route     PUT /api/users/:id
- * @access    private
+ * @access    private/admin
  */
 exports.updateUser = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
@@ -71,7 +71,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 /**
  * @desc      Update specific user password
  * @route     PUT /api/users/changePassword/:id
- * @access    private
+ * @access    private/admin
  */
 exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
@@ -95,7 +95,7 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
 /**
  * @desc      Get logged user data
  * @route     GET /api/users/getMe
- * @access    private
+ * @access    private/protect/user
  */
 exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
     const user = await UserModel.findById(req.user._id)
@@ -107,7 +107,7 @@ exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
 /**
  * @desc      Update logged user password
  * @route     PUT /api/users/changeMyPassword
- * @access    private
+ * @access    private/protect/user
  */
 exports.changeLoggedUserPassword = asyncHandler(async (req, res) => {
     //Hashing password
@@ -128,7 +128,7 @@ exports.changeLoggedUserPassword = asyncHandler(async (req, res) => {
 /**
  * @desc      Update logged user data (without password)
  * @route     PUT /api/users/updateMe
- * @access    private
+ * @access    private/protect/user
  */
 exports.updateLoggedUserData = asyncHandler(async (req, res) => {
     const user = await UserModel.findByIdAndUpdate(
@@ -148,7 +148,7 @@ exports.updateLoggedUserData = asyncHandler(async (req, res) => {
 /**
  * @desc      Deactivate logged-in user's account
  * @route     Delete /api/users/deactivateMe
- * @access    private
+ * @access    private/protect/user
  */
 exports.deactivateLoggedUser  = asyncHandler(async (req, res) => {
     await UserModel.findByIdAndUpdate(req.user._id, { active: false });
@@ -162,7 +162,7 @@ exports.deactivateLoggedUser  = asyncHandler(async (req, res) => {
 /**
  * @desc      Reactivate logged-in user's account
  * @route     PATCH /api/users/reactivateMe
- * @access    Private
+ * @access    private/protect/user
  */
 exports.reactiveLoggedUser = asyncHandler(async (req, res, next) => {
     const user = await UserModel.findByIdAndUpdate(

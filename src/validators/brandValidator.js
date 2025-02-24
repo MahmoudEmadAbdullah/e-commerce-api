@@ -1,11 +1,19 @@
 const slugify = require('slugify');
 const { check, body } = require('express-validator');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
+const BrandModel = require('../../DB/models/brandModel');
 
 
 exports.getBrandValidator = [
     check('id')
-        .isMongoId().withMessage('Invalid brand Id format'),
+        .isMongoId().withMessage('Invalid brand Id format')
+        .custom(async (brandId) => {
+            const brand = await BrandModel.findById(brandId);
+            if(!brand) {
+                throw new Error(`No brand for this Id: ${brandId}`);
+            }
+            return true;
+        }),
 
     validatorMiddleware,
 ];
@@ -29,7 +37,14 @@ exports.createBrandValidator = [
 exports.updateBrandValidator = [
     check('id')
         .notEmpty().withMessage('id required')
-        .isMongoId().withMessage('Invalid brand Id format'),
+        .isMongoId().withMessage('Invalid brand Id format')
+        .custom(async (brandId) => {
+            const brand = await BrandModel.findById(brandId);
+            if(!brand) {
+                throw new Error(`No brand for this Id: ${brandId}`);
+            }
+            return true;
+        }),
 
     body('name')
         .optional()
@@ -48,7 +63,14 @@ exports.updateBrandValidator = [
 exports.deleteBrandValidator = [
     check('id')
         .notEmpty().withMessage('id required')
-        .isMongoId().withMessage('Invalid brand Id format'),
+        .isMongoId().withMessage('Invalid brand Id format')
+        .custom(async (brandId) => {
+            const brand = await BrandModel.findById(brandId);
+            if(!brand) {
+                throw new Error(`No brand for this Id: ${brandId}`);
+            }
+            return true;
+        }),
         
     validatorMiddleware,
 ];

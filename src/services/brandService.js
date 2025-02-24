@@ -26,7 +26,7 @@ exports.getBrand = factoryHandler.getDocument(BrandModel);
 
 /**
  * @desc      Create  brand
- * @route     POST /api/brand
+ * @route     POST /api/brands
  * @access    private
  */
 exports.createBrand = factoryHandler.createDocument(BrandModel);

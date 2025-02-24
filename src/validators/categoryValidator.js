@@ -1,11 +1,19 @@
 const slugify = require('slugify');
 const { check, body } = require('express-validator');
 const validatorMiddelware = require('../middlewares/validatorMiddleware');
+const CategoryModel = require('../../DB/models/categoryModel');
 
 
 exports.getCategoryValidator = [
     check('id')
-        .isMongoId().withMessage('Invalid category id format'),
+        .isMongoId().withMessage('Invalid category id format')
+        .custom(async (categoryId) => {
+            const category = await CategoryModel.findById(categoryId);
+            if(!category) {
+                throw new Error(`No category for this Id: ${categoryId}`);
+            }
+            return true;
+        }),
 
     validatorMiddelware,
 ];
@@ -29,7 +37,14 @@ exports.createCategoryValidator = [
 exports.updateCategoryValidator = [
     check('id')
         .notEmpty().withMessage('id required')
-        .isMongoId().withMessage('Invalid category id format'),
+        .isMongoId().withMessage('Invalid category id format')
+        .custom(async (categoryId) => {
+            const category = await CategoryModel.findById(categoryId);
+            if(!category) {
+                throw new Error(`No category for this Id: ${categoryId}`);
+            }
+            return true;
+        }),
 
     body('name')
         .optional()
@@ -48,7 +63,14 @@ exports.updateCategoryValidator = [
 exports.deleteCategoryValidator = [
     check('id')
         .notEmpty().withMessage('id required')
-        .isMongoId().withMessage('Invalid category id format'),
+        .isMongoId().withMessage('Invalid category id format')
+        .custom(async (categoryId) => {
+            const category = await CategoryModel.findById(categoryId);
+            if(!category) {
+                throw new Error(`No category for this Id: ${categoryId}`);
+            }
+            return true;
+        }),
         
     validatorMiddelware,
 ];

@@ -67,14 +67,13 @@ router
 
 router
     .route('/:id')
-    .get(getUser, getUserValidator)
-    .delete(deleteUser, deleteUserValidator)
+    .get(getUserValidator, getUser)
+    .delete(deleteUserValidator, deleteUser)
     .put(
         uploadUserImage,
         resizeUserImage,
         updateUserValidator,
         updateUser
-
     );
 
 router.put(

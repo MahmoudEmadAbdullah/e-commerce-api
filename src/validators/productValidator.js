@@ -1,14 +1,25 @@
 const slugify = require('slugify');
+const mongoose = require('mongoose');
 const { check, body } = require('express-validator');
+
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const CategoryModel = require('../../DB/models/categoryModel');
 const SubCategoryModel = require("../../DB/models/subCategoryModel");
 const BrandModel = require('../../DB/models/brandModel');
-const mongoose = require('mongoose');
+const ProductModel = require('../../DB/models/productModel');
+
 
 exports.getProductValidator = [
     check('id')
-        .isMongoId().withMessage('Invalid product id format'),
+        .isMongoId().withMessage('Invalid product id format')
+        .custom(async (productId) => {
+            const product = await ProductModel.findById(productId);
+            if(!product) {
+                throw new Error(`No product for this Id: ${productId}`);
+            }
+            return true;
+        }),
+
     validatorMiddleware,
 ];
 
@@ -143,7 +154,14 @@ exports.createProductValidator = [
 exports.updateProductValidator = [
     check('id')
         .notEmpty().withMessage('product id is required')
-        .isMongoId().withMessage('Invalid Product id format'),
+        .isMongoId().withMessage('Invalid Product id format')
+        .custom(async (productId) => {
+            const product = await ProductModel.findById(productId);
+            if(!product) {
+                throw new Error(`No product for this Id: ${productId}`);
+            }
+            return true;
+        }),
 
     body('title')
         .optional()
@@ -279,7 +297,14 @@ exports.updateProductValidator = [
 exports.deleteProductValidator = [
     check('id')
         .notEmpty().withMessage('product id is required')
-        .isMongoId().withMessage('Invalid Product id format'),
+        .isMongoId().withMessage('Invalid Product id format')
+        .custom(async (productId) => {
+            const product = await ProductModel.findById(productId);
+            if(!product) {
+                throw new Error(`No product for this Id: ${productId}`);
+            }
+            return true;
+        }),
         
     validatorMiddleware,
 ];

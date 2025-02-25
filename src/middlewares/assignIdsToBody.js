@@ -13,5 +13,6 @@
 exports.assignIdsToBody = (req, res, next) => {
     if(!req.body.category) req.body.category = req.params.categoryId;
     if(!req.body.product) req.body.product = req.params.productId;
+    if(!req.body.user) req.body.user = req.user._id.toString();
     next();
 };

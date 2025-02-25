@@ -52,6 +52,8 @@ exports.updateDocument = (Model) =>
         if(!document){
             return next(new ApiError('No document found', 404));
         }
+        // Trigger "save" event when update document (RviewModel)
+        await document.save();
         res.status(200).json({data: document});
     });
 
@@ -64,13 +66,14 @@ exports.updateDocument = (Model) =>
 exports.deleteDocument = (Model) => 
     asyncHandler(async (req, res, next) => {
         const { id } = req.params;
-        const document = await Model.findByIdAndDelete(id);
-        if(!document){
+        const document = await Model.findById(id);
+        if (!document) {
             return next(new ApiError('No document found', 404));
         }
+        //Trigger "deleteOne" event when deleting document (ReviewModel)
+        await document.deleteOne();
         res.status(204).send();
     });
-    
 
     
 /**

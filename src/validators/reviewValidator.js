@@ -40,6 +40,9 @@ exports.createReviewValidator = [
             if(!user){
                 throw new Error(`No user for this Id: ${userId}`);
             }
+            if(userId !== req.user._id.toString()){
+                throw new Error('User ID does not match the logged-in user');
+            }
             //Check if user has already reviewed the product
             const {product} = req.body;
             const existingReview = await ReviewModel.findOne({user: userId, product});
@@ -70,7 +73,7 @@ exports.updateReviewValidator = [
         .custom(async (reviewId, {req}) => {
             const review = await ReviewModel.findById(reviewId);
             if(!review){
-                throw new Error(`No review for this Id: ${review}`);
+                throw new Error(`No review for this Id: ${reviewId}`);
             }
             // Ensure that only the review creator can update it
             if(review.user._id.toString() !== req.user._id.toString()) {
@@ -100,11 +103,11 @@ exports.deleteReviewValidator = [
         .custom(async (reviewId, {req}) => {
             const review = await ReviewModel.findById(reviewId);
             if(!review){
-                throw new Error(`No review for this Id: ${review}`);
+                throw new Error(`No review for this Id: ${reviewId}`);
             }
             if(req.user.role === 'user') {
                 // Ensure that only the review creator can update it
-                if(review.user.toString() !== req.user._id.toString()) {
+                if(review.user._id.toString() !== req.user._id.toString()) {
                     throw new Error('You are not allowed to perform this action');
                 }
             }

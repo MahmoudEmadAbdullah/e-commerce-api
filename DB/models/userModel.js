@@ -66,7 +66,25 @@ const userSchema = new mongoose.Schema(
         active: {
             type: Boolean,
             default: true
-        }
+        },
+        // Child referance (one to many)
+        wishlist: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product'
+            },
+        ],
+        //Embedded Document
+        addresses: [
+            {
+                id: { type: mongoose.Schema.Types.ObjectId },
+                alias: String,
+                detalis: String,
+                phone: String,
+                city: String,
+                postalCode: String
+            },
+        ],
     }, 
     {timestamps: true}
 );

@@ -1,5 +1,7 @@
 const slugify = require('slugify');
 const { check, body } = require('express-validator');
+
+const ApiError = require('../utils/apiError');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const BrandModel = require('../../DB/models/brandModel');
 
@@ -10,7 +12,7 @@ exports.getBrandValidator = [
         .custom(async (brandId) => {
             const brand = await BrandModel.findById(brandId);
             if(!brand) {
-                throw new Error(`No brand for this Id: ${brandId}`);
+                throw new ApiError(`No brand for this Id: ${brandId}`, 404);
             }
             return true;
         }),
@@ -41,7 +43,7 @@ exports.updateBrandValidator = [
         .custom(async (brandId) => {
             const brand = await BrandModel.findById(brandId);
             if(!brand) {
-                throw new Error(`No brand for this Id: ${brandId}`);
+                throw new ApiError(`No brand for this Id: ${brandId}`, 404);
             }
             return true;
         }),
@@ -67,7 +69,7 @@ exports.deleteBrandValidator = [
         .custom(async (brandId) => {
             const brand = await BrandModel.findById(brandId);
             if(!brand) {
-                throw new Error(`No brand for this Id: ${brandId}`);
+                throw new ApiError(`No brand for this Id: ${brandId}`, 404);
             }
             return true;
         }),

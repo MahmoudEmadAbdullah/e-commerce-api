@@ -1,5 +1,6 @@
 const { check, body } = require('express-validator');
 
+const ApiError = require('../utils/apiError');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const UserModel = require('../../DB/models/userModel');
 
@@ -25,7 +26,7 @@ exports.addAddressValidator = [
             });
     
             if (isAddressExist) {
-                throw new Error('This address already exists.');
+                throw new ApiError('This address already exists.', 400);
             }
             return true;
         }),

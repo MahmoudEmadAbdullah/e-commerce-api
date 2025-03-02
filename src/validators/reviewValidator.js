@@ -1,5 +1,6 @@
 const { check, body } = require('express-validator');
 
+const ApiError = require('../utils/apiError');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const UserModel = require('../../DB/models/userModel');
 const ProductModel = require('../../DB/models/productModel');
@@ -12,7 +13,7 @@ exports.getReviewValidator = [
         .custom(async (reviewId) => {
             const review = await ReviewModel.findById(reviewId);
             if(!review){
-                throw new Error(`No review for this Id: ${review}`);
+                throw new ApiError(`No review for this Id: ${review}`, 404);
             }
             return true;
         }),
@@ -38,16 +39,16 @@ exports.createReviewValidator = [
         .custom(async (userId, {req}) => {
             const user = await UserModel.findById(userId);
             if(!user){
-                throw new Error(`No user for this Id: ${userId}`);
+                throw new ApiError(`No user for this Id: ${userId}`, 404);
             }
             if(userId !== req.user._id.toString()){
-                throw new Error('User ID does not match the logged-in user');
+                throw new ApiError('User ID does not match the logged-in user', 400);
             }
             //Check if user has already reviewed the product
             const {product} = req.body;
             const existingReview = await ReviewModel.findOne({user: userId, product});
             if(existingReview) {
-                throw new Error('You have already reviewed this product');
+                throw new ApiError('You have already reviewed this product', 400);
             }
             return true;
         }),
@@ -58,7 +59,7 @@ exports.createReviewValidator = [
         .custom(async (productId) => {
             const product = await ProductModel.findById(productId);
             if(!product) {
-                throw new Error(`No product for this Id: ${productId}`);
+                throw new ApiError(`No product for this Id: ${productId}`, 404);
             }
         }),
 
@@ -73,11 +74,11 @@ exports.updateReviewValidator = [
         .custom(async (reviewId, {req}) => {
             const review = await ReviewModel.findById(reviewId);
             if(!review){
-                throw new Error(`No review for this Id: ${reviewId}`);
+                throw new ApiError(`No review for this Id: ${reviewId}`, 404);
             }
             // Ensure that only the review creator can update it
             if(review.user._id.toString() !== req.user._id.toString()) {
-                throw new Error('You are not allowed to perform this action');
+                throw new ApiError('You are not allowed to perform this action', 403);
             }
             return true;
         }),
@@ -103,12 +104,12 @@ exports.deleteReviewValidator = [
         .custom(async (reviewId, {req}) => {
             const review = await ReviewModel.findById(reviewId);
             if(!review){
-                throw new Error(`No review for this Id: ${reviewId}`);
+                throw new ApiError(`No review for this Id: ${reviewId}`, 404);
             }
             if(req.user.role === 'user') {
                 // Ensure that only the review creator can update it
                 if(review.user._id.toString() !== req.user._id.toString()) {
-                    throw new Error('You are not allowed to perform this action');
+                    throw new ApiError('You are not allowed to perform this action', 403);
                 }
             }
             return true;

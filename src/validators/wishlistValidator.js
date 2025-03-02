@@ -1,5 +1,6 @@
-const { check, body } = require('express-validator');
+const { check } = require('express-validator');
 
+const ApiError = require('../utils/apiError');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const ProductModel = require('../../DB/models/productModel');
 
@@ -10,7 +11,7 @@ exports.WishlistValidator = [
         .custom(async (productId) => {
             const product = await ProductModel.findById(productId);
             if(!product){
-                throw new Error(`No product for this Id: ${productId}`);
+                throw new ApiError(`No product for this Id: ${productId}`, 404);
             }
             return true;
         }),

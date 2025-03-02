@@ -1,6 +1,7 @@
 const slugify = require('slugify');
 const { check } = require('express-validator');
 
+const ApiError = require('../utils/apiError');
 const UserModel = require('../../DB/models/userModel');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 
@@ -24,7 +25,7 @@ exports.signupValidator = [
         .custom(async(userEmail) => {
             const user = await UserModel.findOne({email: userEmail});
             if(user) {
-                throw new Error(`Email already exists: ${userEmail}`)
+                throw new ApiError(`Email already exists: ${userEmail}`, 400)
             }
             return true;
         }),
@@ -39,7 +40,7 @@ exports.signupValidator = [
         .notEmpty().withMessage('passwordConfirm required')
         .custom((confirmPassword, {req}) => {
             if(req.body.password && confirmPassword !== req.body.password) {
-                throw new Error('Password confirmation does not match password');
+                throw new ApiError('Password confirmation does not match password', 400);
             }
             return true;
         }),
@@ -91,7 +92,7 @@ exports.resetPasswordValidator = [
         .notEmpty().withMessage('passwordConfirm required')
         .custom((confirmPassword, {req}) => {
             if(req.body.newPassword && confirmPassword !== req.body.newPassword) {
-                throw new Error('Password confirmation does not match password');
+                throw new ApiError('Password confirmation does not match password', 400);
             }
             return true;
         }),

@@ -10,15 +10,7 @@ const globalError = require('./src/middlewares/errorMiddleware');
 const dbConnection = require('./DB/database');
 
 //Routes
-const categoryRoute = require('./src/routes/categoryRoute');
-const subCategoryRoute = require('./src/routes/subCategoryRoute');
-const brandRoute = require('./src/routes/brandRoute');
-const productRoute = require('./src/routes/productRoute');
-const userRoute = require('./src/routes/userRoute');
-const authRoute = require('./src/routes/authRoute');
-const reviewRoute = require('./src/routes/reviewRoute');
-const wishlistRoute = require('./src/routes/wishlistRoute');
-const addressRoute = require('./src/routes/addressRoute');
+const mountRoute = require('./src/routes/index');
 
 
 //Cnnect with db
@@ -38,15 +30,7 @@ if(process.env.NODE_ENV === 'development') {
 };
 
 //Mount Routes
-app.use('/api/categories', categoryRoute);
-app.use('/api/subCategories', subCategoryRoute);
-app.use('/api/brands', brandRoute);
-app.use('/api/products', productRoute);
-app.use('/api/users', userRoute);
-app.use('/api/auth', authRoute);
-app.use('/api/reviews', reviewRoute);
-app.use('/api/wishlist', wishlistRoute);
-app.use('/api/addresses', addressRoute);
+mountRoute(app);
 
 app.all('*', (req, res, next) => {
     next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));

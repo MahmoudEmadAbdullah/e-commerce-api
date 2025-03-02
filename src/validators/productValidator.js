@@ -2,6 +2,7 @@ const slugify = require('slugify');
 const mongoose = require('mongoose');
 const { check, body } = require('express-validator');
 
+const ApiError = require('../utils/apiError');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const CategoryModel = require('../../DB/models/categoryModel');
 const SubCategoryModel = require("../../DB/models/subCategoryModel");
@@ -15,7 +16,7 @@ exports.getProductValidator = [
         .custom(async (productId) => {
             const product = await ProductModel.findById(productId);
             if(!product) {
-                throw new Error(`No product for this Id: ${productId}`);
+                throw new ApiError(`No product for this Id: ${productId}`, 404);
             }
             return true;
         }),
@@ -58,7 +59,7 @@ exports.createProductValidator = [
         .isFloat({min: 0}).withMessage('Price after discount must be a positive number')
         .custom((val, {req}) => {
             if(val >= req.body.price) {
-                throw new Error('Price after discount must be less than the original price')
+                throw new ApiError('Price after discount must be less than the original price', 400);
             }
             return true;
         }),
@@ -67,9 +68,13 @@ exports.createProductValidator = [
         .optional()
         .isArray().withMessage('Colors must be an array')
         .notEmpty().withMessage('Colors array should not be empty')
+        .customSanitizer((colors) => {
+            if(!Array.isArray(colors)) return [];
+            return colors.map(color => color.trim().toLowerCase());
+        })
         .custom((colors) => {
             if(colors && !colors.every(color => typeof color === 'string')){
-                throw new Error('Each color must be a string');
+                throw new ApiError('Each color must be a string', 400);
             }
             return true;
         }),
@@ -80,7 +85,7 @@ exports.createProductValidator = [
         .notEmpty().withMessage('Images array should not be empty')
         .custom((images) => {
             if(images && !images.every(image => typeof image === 'string')){
-                throw new Error('Each image must be a string');
+                throw new ApiError('Each image must be a string', 400);
             }
             return true;
         }),
@@ -95,7 +100,7 @@ exports.createProductValidator = [
         .custom(async(categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category){
-                throw new Error(`No category for this Id: ${categoryId}`);
+                throw new ApiError(`No category for this Id: ${categoryId}`, 404);
             }
             return true;
         }),
@@ -124,7 +129,7 @@ exports.createProductValidator = [
                     }
                 }
             }));
-            if(errors.length > 0) throw new Error(errors.join(', '));
+            if(errors.length > 0) throw new ApiError(errors.join(', '), 400);
             return true;
         }),
 
@@ -134,7 +139,7 @@ exports.createProductValidator = [
         .custom(async(brandId) => {
             const brand = await BrandModel.findById(brandId);
             if(!brand){
-                throw new Error(`No brand for this Id: ${brandId}`);
+                throw new ApiError(`No brand for this Id: ${brandId}`, 400);
             }
             return true;
         }),
@@ -158,7 +163,7 @@ exports.updateProductValidator = [
         .custom(async (productId) => {
             const product = await ProductModel.findById(productId);
             if(!product) {
-                throw new Error(`No product for this Id: ${productId}`);
+                throw new ApiError(`No product for this Id: ${productId}`, 400);
             }
             return true;
         }),
@@ -198,10 +203,10 @@ exports.updateProductValidator = [
         .isFloat({min: 0}).withMessage('Price after discount must be a positive number')
         .custom((val, { req }) => {
             if (req.body.price === undefined) {
-                throw new Error('Price is required when updating priceAfterDiscount');
+                throw new ApiError('Price is required when updating priceAfterDiscount', 400);
             }
             if (val >= req.body.price) {
-                throw new Error('Price after discount must be less than the original price');
+                throw new ApiError('Price after discount must be less than the original price', 400);
             }
             return true;
         }),
@@ -210,9 +215,13 @@ exports.updateProductValidator = [
         .optional()
         .isArray().withMessage('Colors must be an array')
         .notEmpty().withMessage('Colors array should not be empty')
+        .customSanitizer((colors) => {
+            if(!Array.isArray(colors)) return [];
+            return colors.map(color => color.trim().toLowerCase());
+        })
         .custom((colors) => {
             if(colors && !colors.every(color => typeof color === 'string')){
-                throw new Error('Each color must be a string');
+                throw new ApiError('Each color must be a string', 400);
             }
             return true;
         }),
@@ -223,7 +232,7 @@ exports.updateProductValidator = [
         .notEmpty().withMessage('Images array should not be empty')
         .custom((images) => {
             if(images && !images.every(image => typeof image === 'string')){
-                throw new Error('Each image must be a string');
+                throw new ApiError('Each image must be a string', 400);
             }
             return true;
         }),
@@ -238,7 +247,7 @@ exports.updateProductValidator = [
         .custom(async(categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category){
-                throw new Error(`No category for this Id: ${categoryId}`);
+                throw new ApiError(`No category for this Id: ${categoryId}`, 404);
             }
             return true;
         }),
@@ -267,7 +276,7 @@ exports.updateProductValidator = [
                     }
                 }
             }));
-            if(errors.length > 0) throw new Error(errors.join(', '));
+            if(errors.length > 0) throw new ApiError(errors.join(', '), 400);
             return true;
         }),
 
@@ -277,7 +286,7 @@ exports.updateProductValidator = [
         .custom(async(brandId) => {
             const brand = await BrandModel.findById(brandId);
             if(!brand){
-                throw new Error(`No brand for this Id: ${brandId}`);
+                throw new ApiError(`No brand for this Id: ${brandId}`, 404);
             }
             return true;
         }),
@@ -301,7 +310,7 @@ exports.deleteProductValidator = [
         .custom(async (productId) => {
             const product = await ProductModel.findById(productId);
             if(!product) {
-                throw new Error(`No product for this Id: ${productId}`);
+                throw new ApiError(`No product for this Id: ${productId}`, 404);
             }
             return true;
         }),

@@ -1,5 +1,7 @@
 const slugify = require('slugify');
 const { check, body } = require('express-validator');
+
+const ApiError = require('../utils/apiError');
 const validatorMiddelware = require('../middlewares/validatorMiddleware');
 const CategoryModel = require('../../DB/models/categoryModel');
 
@@ -10,7 +12,7 @@ exports.getCategoryValidator = [
         .custom(async (categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category) {
-                throw new Error(`No category for this Id: ${categoryId}`);
+                throw new ApiError(`No category for this Id: ${categoryId}`, 404);
             }
             return true;
         }),
@@ -41,7 +43,7 @@ exports.updateCategoryValidator = [
         .custom(async (categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category) {
-                throw new Error(`No category for this Id: ${categoryId}`);
+                throw new ApiError(`No category for this Id: ${categoryId}`, 404);
             }
             return true;
         }),
@@ -67,7 +69,7 @@ exports.deleteCategoryValidator = [
         .custom(async (categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category) {
-                throw new Error(`No category for this Id: ${categoryId}`);
+                throw new ApiError(`No category for this Id: ${categoryId}`, 404);
             }
             return true;
         }),

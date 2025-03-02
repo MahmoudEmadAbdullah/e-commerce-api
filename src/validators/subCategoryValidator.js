@@ -1,5 +1,7 @@
 const slugify = require('slugify');
 const { check, body } = require('express-validator');
+
+const ApiError = require('../utils/apiError');
 const validatorMiddelware = require('../middlewares/validatorMiddleware');
 const CategoryModel = require('../../DB/models/categoryModel');
 const SubCategoryModel = require("../../DB/models/subCategoryModel");
@@ -11,7 +13,7 @@ exports.getSubCategoryValidator = [
         .custom(async (subCategoryId) => {
             const subCategory = await SubCategoryModel.findById(subCategoryId);
             if(!subCategory) {
-                throw new Error(`No subCategory for this Id: ${subCategoryId}`);
+                throw new ApiError(`No subCategory for this Id: ${subCategoryId}`, 404);
             }
             return true;
         }),
@@ -37,7 +39,7 @@ exports.createSubCategoryValidator = [
         .custom(async(categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category){
-                throw new Error(`No category for this id: ${categoryId}`);
+                throw new ApiError(`No category for this id: ${categoryId}`, 404);
             }
             return true;
         }),
@@ -53,7 +55,7 @@ exports.updateSubCategoryValidator = [
         .custom(async (subCategoryId) => {
             const subCategory = await SubCategoryModel.findById(subCategoryId);
             if(!subCategory) {
-                throw new Error(`No subCategory for this Id: ${subCategoryId}`);
+                throw new ApiError(`No subCategory for this Id: ${subCategoryId}`, 404);
             }
             return true;
         }),
@@ -74,7 +76,7 @@ exports.updateSubCategoryValidator = [
         .custom(async(categoryId) => {
             const category = await CategoryModel.findById(categoryId);
             if(!category){
-                throw new Error(`No category for this id: ${categoryId}`);
+                throw new ApiError(`No category for this id: ${categoryId}`, 404);
             }
             return true;
         }),
@@ -90,7 +92,7 @@ exports.deleteSubCategoryValidator = [
         .custom(async (subCategoryId) => {
             const subCategory = await SubCategoryModel.findById(subCategoryId);
             if(!subCategory) {
-                throw new Error(`No subCategory for this Id: ${subCategoryId}`);
+                throw new ApiError(`No subCategory for this Id: ${subCategoryId}`, 404);
             }
             return true;
         }),

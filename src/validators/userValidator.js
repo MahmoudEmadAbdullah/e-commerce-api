@@ -2,6 +2,7 @@ const slugify = require('slugify');
 const bcrypt = require('bcrypt');
 const { check, body } = require('express-validator');
 
+const ApiError = require('../utils/apiError');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 const UserModel = require('../../DB/models/userModel');
 
@@ -12,7 +13,7 @@ exports.getUserValidator = [
         .custom(async (userId) => {
             const user = await UserModel.findById(userId);
             if(!user) {
-                throw new Error(`No user for this Id: ${userId}`);
+                throw new ApiError(`No user for this Id: ${userId}`, 404);
             }
             return true;
         }),
@@ -40,7 +41,7 @@ exports.createUserValidator = [
         .custom(async(userEmail) => {
             const user = await UserModel.findOne({email: userEmail});
             if(user) {
-                throw new Error(`Email already exists: ${userEmail}`)
+                throw new ApiError(`Email already exists: ${userEmail}`, 400)
             }
             return true;
         }),
@@ -55,7 +56,7 @@ exports.createUserValidator = [
         .notEmpty().withMessage('passwordConfirm required')
         .custom((confirmPassword, {req}) => {
             if(req.body.password && confirmPassword !== req.body.password) {
-                throw new Error('Password confirmation does not match password');
+                throw new ApiError('Password confirmation does not match password', 400);
             }
             return true;
         }),
@@ -85,7 +86,7 @@ exports.updateUserValidator = [
         .custom(async (userId) => {
             const user = await UserModel.findById(userId);
             if(!user) {
-                throw new Error(`No user for this Id: ${userId}`);
+                throw new ApiError(`No user for this Id: ${userId}`, 404);
             }
             return true;
         }),
@@ -108,7 +109,7 @@ exports.updateUserValidator = [
         .custom(async(userEmail) => {
             const user = await UserModel.findOne({email: userEmail});
             if(user && user.id !== req.params.id) {
-                throw new Error(`Email already exists: ${userEmail}`)
+                throw new ApiError(`Email already exists: ${userEmail}`, 400)
             }
             return true;
         }),
@@ -138,7 +139,7 @@ exports.changeUserPasswordValidator = [
         .custom(async (userId) => {
             const user = await UserModel.findById(userId);
             if(!user) {
-                throw new Error(`No user for this Id: ${userId}`);
+                throw new ApiError(`No user for this Id: ${userId}`, 404);
             }
             return true;
         }),
@@ -148,11 +149,11 @@ exports.changeUserPasswordValidator = [
         .custom(async (currentPassword, {req}) => {
             const user = await UserModel.findById(req.params.id);
             if(!user) {
-                throw new Error(`No user for this Id: ${req.params.id}`);
+                throw new ApiError(`No user for this Id: ${req.params.id}`, 404);
             }
             const isCorrectPassword = await bcrypt.compare(req.body.currentPassword, user.password);
             if(!isCorrectPassword) {
-                throw new Error('Incorrect current password');
+                throw new ApiError('Incorrect current password', 401);
             }
             return true;
         }),
@@ -167,7 +168,7 @@ exports.changeUserPasswordValidator = [
         .notEmpty().withMessage('You must enter the password confirm')
         .custom((confirmPassword, {req}) => {
             if(req.body.password && confirmPassword !== req.body.password) {
-                throw new Error('Password confirmation does not match password');
+                throw new ApiError('Password confirmation does not match password', 400);
             }
             return true;
         }),
@@ -183,7 +184,7 @@ exports.deleteUserValidator = [
         .custom(async (userId) => {
             const user = await UserModel.findById(userId);
             if(!user) {
-                throw new Error(`No user for this Id: ${userId}`);
+                throw new ApiError(`No user for this Id: ${userId}`, 404);
             }
             return true;
         }),
@@ -198,7 +199,7 @@ exports.changeLoggedUserPasswordValidator = [
         .custom(async (currentPassword, {req}) => {
             const isCorrectPassword = await bcrypt.compare(req.body.currentPassword, req.user.password);
             if(!isCorrectPassword) {
-                throw new Error('Incorrect current password');
+                throw new ApiError('Incorrect current password', 401);
             }
             return true;
         }),
@@ -213,7 +214,7 @@ exports.changeLoggedUserPasswordValidator = [
         .notEmpty().withMessage('You must enter the password confirm')
         .custom((confirmPassword, {req}) => {
             if(req.body.password && confirmPassword !== req.body.password) {
-                throw new Error('Password confirmation does not match password');
+                throw new ApiError('Password confirmation does not match password', 400);
             }
             return true;
         }),
@@ -241,7 +242,7 @@ exports.updateLoggedUserValidator = [
         .custom(async(userEmail) => {
             const user = await UserModel.findOne({email: userEmail});
             if(user && user.id !== req.user._id) {
-                throw new Error(`Email already exists: ${userEmail}`)
+                throw new ApiError(`Email already exists: ${userEmail}`, 400)
             }
             return true;
         }),

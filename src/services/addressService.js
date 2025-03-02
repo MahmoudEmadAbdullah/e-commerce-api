@@ -30,6 +30,7 @@ exports.addAddressToAddressesList = asyncHandler(async (req, res) => {
  * @access    private/protected/user
  */
 exports.removeAddressFromAddressesList = asyncHandler(async (req, res) => {
+    // $pull => remove address object from user addresses array if address exist
     const user = await UserModel.findByIdAndUpdate(
         req.user._id,
         {

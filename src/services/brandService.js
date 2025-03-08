@@ -13,7 +13,7 @@ const {uploadSingleImage} = require('../middlewares/uploadImage');
  * @route     GET /api/brands
  * @access    public
  */
-exports.getBrands = factoryHandler.getAllDocuments(BrandModel);
+exports.getBrands = factoryHandler.getAllDocuments(BrandModel, 'brands', true);
 
 
 /**
@@ -21,7 +21,7 @@ exports.getBrands = factoryHandler.getAllDocuments(BrandModel);
  * @route     Get /api/brands/:id
  * @access    public
  */
-exports.getBrand = factoryHandler.getDocument(BrandModel);
+exports.getBrand = factoryHandler.getDocument(BrandModel, undefined, true);
 
 
 /**
@@ -29,7 +29,7 @@ exports.getBrand = factoryHandler.getDocument(BrandModel);
  * @route     POST /api/brands
  * @access    private
  */
-exports.createBrand = factoryHandler.createDocument(BrandModel);
+exports.createBrand = factoryHandler.createDocument(BrandModel, true);
 
 
 /**
@@ -37,7 +37,7 @@ exports.createBrand = factoryHandler.createDocument(BrandModel);
  * @route     PUT /api/brands/:id
  * @access    private
  */
-exports.updateBrand = factoryHandler.updateDocument(BrandModel);
+exports.updateBrand = factoryHandler.updateDocument(BrandModel, true);
 
 
 /**
@@ -45,7 +45,7 @@ exports.updateBrand = factoryHandler.updateDocument(BrandModel);
  * @route     DELETE /api/brands/:id
  * @access    private
  */
-exports.deleteBrand = factoryHandler.deleteDocument(BrandModel);
+exports.deleteBrand = factoryHandler.deleteDocument(BrandModel, true);
 
 
 

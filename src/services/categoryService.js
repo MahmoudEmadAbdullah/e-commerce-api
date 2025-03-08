@@ -13,7 +13,7 @@ const {uploadSingleImage} = require('../middlewares/uploadImage');
  * @route    GET  /api/categories
  * @access   public
  */
-exports.getCategories = factoryHandler.getAllDocuments(CategoryModel);
+exports.getCategories = factoryHandler.getAllDocuments(CategoryModel, 'Categories', true);
 
 
 /**
@@ -21,7 +21,7 @@ exports.getCategories = factoryHandler.getAllDocuments(CategoryModel);
  * @route    GET  /api/categories/:id
  * @access   public
  */
-exports.getCategory = factoryHandler.getDocument(CategoryModel);
+exports.getCategory = factoryHandler.getDocument(CategoryModel, undefined, true);
 
 
 /**
@@ -29,7 +29,7 @@ exports.getCategory = factoryHandler.getDocument(CategoryModel);
  * @route   POST  /api/categories
  * @access  private
  */
-exports.createCategory = factoryHandler.createDocument(CategoryModel);
+exports.createCategory = factoryHandler.createDocument(CategoryModel, true);
 
 
 /** 
@@ -37,7 +37,7 @@ exports.createCategory = factoryHandler.createDocument(CategoryModel);
  * @route    PUT  /api/categories/:id
  * @access   private
  */
-exports.updateCategory = factoryHandler.updateDocument(CategoryModel);
+exports.updateCategory = factoryHandler.updateDocument(CategoryModel, true);
 
 
 /**
@@ -45,7 +45,7 @@ exports.updateCategory = factoryHandler.updateDocument(CategoryModel);
  * @route    DELETE  /api/categories/:id
  * @access   private
  */
-exports.deleteCategory = factoryHandler.deleteDocument(CategoryModel);
+exports.deleteCategory = factoryHandler.deleteDocument(CategoryModel, true);
 
 
 

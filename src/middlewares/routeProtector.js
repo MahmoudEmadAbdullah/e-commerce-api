@@ -12,17 +12,17 @@ const UserModel = require('../../DB/models/userModel');
  */
 exports.protect = asyncHandler(async (req, res, next) => {
     //1- check if token exist, if exists catch it
-    let token;
+    let accessToken;
     if( req.headers.authorization && 
         req.headers.authorization.startsWith('Bearer'))
     {
-        token = req.headers.authorization.split(' ')[1];
+        accessToken = req.headers.authorization.split(' ')[1];
     }
-    if(!token){
+    if(!accessToken){
         return next(new ApiError('You are not login, please login to access this route', 401));
     }
     //2- verify token (no changes happens, expired token)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET);
     //3- check if user exists and is active
     const currentUser = await UserModel.findById(decoded.userId);
     if(!currentUser) {
@@ -46,7 +46,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
         if(passwordChangedTimestamp > decoded.iat){
             return next(
                 new ApiError(
-                    'User recently changed his password, please login again..', 401)
+                    'Password changed recently. Please log in again..', 401)
             );
         }
     }

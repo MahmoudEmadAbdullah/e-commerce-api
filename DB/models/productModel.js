@@ -74,6 +74,7 @@ const productSchema = new mongoose.Schema(
     }, 
     {
         timestamps: true,
+        collection: 'products',
         //To enable virtual populate
         toObject: {virtuals: true},
         toJSON: {virtuals: true}

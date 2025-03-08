@@ -67,6 +67,10 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: true
         },
+        lastLogin: {
+            type: Date,
+            default: null
+        },
         // Child referance (one to many)
         wishlist: [
             {
@@ -86,7 +90,7 @@ const userSchema = new mongoose.Schema(
             },
         ],
     }, 
-    {timestamps: true}
+    {timestamps: true, collection: 'users'}
 );
 
 

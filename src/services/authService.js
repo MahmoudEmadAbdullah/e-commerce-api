@@ -1,11 +1,12 @@
 const bcrypt = require('bcrypt');
 const asyncHandler = require('express-async-handler');
+const jwt = require('jsonwebtoken');
 
 const ApiError = require('../utils/apiError');
-const generateToken = require('../utils/generateToken');
+const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
 const hashResetCode = require('../utils/hashResetCode');
-
+const { client } = require('../config/redisConfig');
 const UserModel = require('../../DB/models/userModel');
 
 
@@ -24,10 +25,39 @@ exports.signup = asyncHandler(async (req, res) => {
             password: req.body.password,
         }
     );
-    //2-Generate token
-    const token = generateToken(user._id);
-    //send response
-    res.status(201).json({data: user, token});
+
+    // 2- Update last login time
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    // 3- Generate token
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // 4- Store Refresh Token in Cahe
+    try {
+        const refreshKey = `refreshToken:${user._id}`;
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+        await client.set(refreshKey, hashedRefreshToken, {
+            EX: 7 * 24 * 60 * 60,
+        });
+    } catch(error) {
+        return next(new ApiError('Session initialization failed', 500));
+    }
+
+    // 5- Send Cookie and response
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    
+    res.status(201).json({
+        accessToken,
+        user: { id: user._id, name: user.name, email: user.email }
+    });
 });
 
 
@@ -37,16 +67,109 @@ exports.signup = asyncHandler(async (req, res) => {
  * @access    public
  */
 exports.login = asyncHandler(async (req, res, next) => {
-    //1- check if email and password in the body (validation layer)
-    //2- check if user exist and check if password is correct
-    const user = await UserModel.findOne({email: req.body.email});
-    if(!user || !(await bcrypt.compare(req.body.password, user.password))){
+    // 1- Verify the user
+    const { email, password } = req.body;
+    const user = await UserModel.findOne({email});
+    if(!user || !(await bcrypt.compare(password, user.password))){
         return next(new ApiError(`Invalid email or password`, 401));
     }
-    //3- generate token
-    const token = generateToken(user._id);
-    //send response
-    res.status(200).json({data: user, token});
+
+    // 2- Update last login time
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false});
+
+    // 3- generate tokens
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // 4- Store Refresh Token in Cahe
+    try {
+        const refreshKey = `refreshToken:${user._id}`;
+        await client.del(refreshKey);
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+        await client.set(refreshKey, hashedRefreshToken, {
+            EX: 7 * 24 * 60 * 60,
+        });
+    } catch(error) {
+        return next(new ApiError('Session initialization failed', 500));
+    }
+
+    // Send Cookie and response
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.status(200).json({
+        accessToken,
+        user: {id: user._id, name: user.name, email: user.email}
+    });
+});
+
+
+/**
+ * @desc      Refresh Access Token using Refresh Token
+ * @route     POST /api/auth/refresh-token
+ * @access    public
+ */
+exports.refreshToken = asyncHandler(async (req, res, next) => {
+    const refreshToken = req.cookies?.refreshToken;
+    if(!refreshToken) {
+        return next(new ApiError('Refresh token is required', 401));
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    // Verify that the Refresh Token exists in Redis
+    try {
+        const refreshKey = `refreshToken:${decoded.userId}`;
+        const storedHashedToken = await client.get(refreshKey);
+        if(!storedHashedToken) {
+            return next(new ApiError('Invalid or expired refresh token', 401));
+        }
+        const isMatch = await bcrypt.compare(refreshToken, storedHashedToken);
+        if(!isMatch) {
+            return next(new ApiError('Refresh token is required', 401));
+        }
+    
+        // Generate a new Access Token
+        const newAccessToken = generateAccessToken(decoded.userId)
+    
+        res.status(200).json({ accessToken: newAccessToken });
+    } catch(error) {
+        return next(new ApiError('Server error while validating refresh token', 500));
+    }
+
+});
+
+
+/**
+ * @desc      Logout user 
+ * @route     POST /api/auth/logout
+ * @access    private
+ */
+exports.logout = asyncHandler(async (req, res, next) => {
+    const userId = req.user._id;
+
+    try {
+        const refreshKey = `refreshToken:${userId}`;
+        await client.del(refreshKey);
+    } catch(error) {
+        return next(new ApiError('Session initialization failed', 500));
+    }
+
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+        maxAge: 0
+    });
+
+    res.status(200).json({ message: 'Logged out successfully'});
 });
 
 

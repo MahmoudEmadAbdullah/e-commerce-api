@@ -13,7 +13,7 @@ const ProductModel = require('../../DB/models/productModel');
  * @route     GET /api/products
  * @access    public
  */
-exports.getProducts = factoryHandler.getAllDocuments(ProductModel, 'products')
+exports.getProducts = factoryHandler.getAllDocuments(ProductModel, 'products', true);
 
 
 /**
@@ -21,7 +21,7 @@ exports.getProducts = factoryHandler.getAllDocuments(ProductModel, 'products')
  * @route     GET /api/products/:id
  * @access    public
  */
-exports.getProduct = factoryHandler.getDocument(ProductModel, 'reviews');
+exports.getProduct = factoryHandler.getDocument(ProductModel, 'reviews', true);
 
 
 /**
@@ -29,7 +29,7 @@ exports.getProduct = factoryHandler.getDocument(ProductModel, 'reviews');
  * @route     POST /api/products
  * @access    private
  */
-exports.createProduct = factoryHandler.createDocument(ProductModel);
+exports.createProduct = factoryHandler.createDocument(ProductModel, true);
 
 
 /**
@@ -37,7 +37,7 @@ exports.createProduct = factoryHandler.createDocument(ProductModel);
  * @route     PUT /api/products/:id
  * @access    private
  */
-exports.updateProduct = factoryHandler.updateDocument(ProductModel);
+exports.updateProduct = factoryHandler.updateDocument(ProductModel, true);
 
 
 /**
@@ -45,7 +45,7 @@ exports.updateProduct = factoryHandler.updateDocument(ProductModel);
  * @route     DELETE /api/products/:id
  * @access    private      
  */
-exports.deleteProduct = factoryHandler.deleteDocument(ProductModel);
+exports.deleteProduct = factoryHandler.deleteDocument(ProductModel, true);
 
 
 // Upload mix of image

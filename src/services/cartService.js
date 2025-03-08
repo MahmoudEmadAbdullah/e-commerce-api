@@ -4,6 +4,13 @@ const ApiError = require('../utils/apiError');
 const CartModel = require('../../DB/models/cartModel');
 const ProductModel = require('../../DB/models/productModel');
 const CouponModel = require('../../DB/models/couponModel');
+const { client } = require('../config/redisConfig');
+const {
+    getSessionId, 
+    updateCartCache, 
+    deleteCartCache,
+} = require('../utils/cacheUtils');
+
 
 
 /**
@@ -12,6 +19,8 @@ const CouponModel = require('../../DB/models/couponModel');
  * @access    private/user
  */
 exports.addProductToCart = asyncHandler(async (req, res, next) => {
+    const sessionId = getSessionId(req);
+
     const { productId, quantity, color } = req.body;
     // Get only the price of the product
     const product = await ProductModel.findById(productId).select('price');
@@ -56,12 +65,19 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
             // upsert creates the cart if it does not exist.
             { new: true, upsert: true, select: '-createdAt -__v'},
         );
+
+        // Update cache after add product to cart
+        await updateCartCache(sessionId, newCart);
+
         return res.status(200).json({
             status: 'success',
             message: 'Product added to cart',
             data: newCart
         });
     }
+
+    // Update cahe after the quantity updated
+    await updateCartCache(sessionId, cart);
 
     res.status(200).json({
         status: 'success',
@@ -78,12 +94,30 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
  * @access    private/user
  */
 exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
+    const sessionId = getSessionId(req);
+    try {
+        const cachedCart = await client.get(sessionId);
+        if(cachedCart) {
+            return res.status(200).json({
+                source: 'Cache',
+                numOfCartItem: JSON.parse(cachedCart).cartItems.length,
+                data: JSON.parse(cachedCart),
+            });
+        }
+    } catch (err) {
+        console.error('Error fetching cart from cache:', err);
+    }
+
     const cart = await CartModel.findOne({user: req.user._id});
     if(!cart) {
         return next(new ApiError(`No cart for this user Id: ${req.user._id}`, 404));
     }
 
+    // Update cache
+    await updateCartCache(sessionId, cart);
+
     res.status(200).json({
+        source: 'database',
         numOfCartItem: cart.cartItems.length,
         data: cart
     });
@@ -96,6 +130,7 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
  * @access    private/user
  */
 exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
+    const sessionId = getSessionId(req);
     // Remove the product from the cart
     const cart = await CartModel.findOneAndUpdate(
         { user: req.user._id },
@@ -111,8 +146,13 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
     cart.totalCartPrice = cart.cartItems.reduce((total, item) => {
         return total + (item.price * item.quantity)
     }, 0);
-
     await cart.save();
+
+    // Delete cache after remove product 
+    await deleteCartCache(sessionId);
+
+    // Update cache 
+    await updateCartCache(sessionId, cart);
 
     res.status(200).json({
         status: 'success',
@@ -128,7 +168,12 @@ exports.removeProductFromCart = asyncHandler(async (req, res, next) => {
  * @access    private/user
  */
 exports.clearCart = asyncHandler(async (req, res) => {
+    const sessionId = getSessionId(req);
     await CartModel.findOneAndDelete({ user: req.user._id });
+
+    // Delete cahe after clear cart
+    await deleteCartCache(sessionId);
+
     res.status(204).send();
 });
 
@@ -139,6 +184,7 @@ exports.clearCart = asyncHandler(async (req, res) => {
  * @access    private/user
  */
 exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
+    const sessionId = getSessionId(req);
     const { quantity } = req.body;
     const { itemId } = req.params;
     // Validate that the quantity is correct
@@ -167,6 +213,12 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 
     await cart.save();
 
+    // Delete cache after update quantity
+    await deleteCartCache(sessionId);
+
+    // Update cahe
+    await updateCartCache(sessionId, cart);
+
     res.status(200).json({
         status: 'success',
         message: 'Cart item quantity updated successfully.',
@@ -181,6 +233,7 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
  * @access    private/user
  */
 exports.applyCoupon = asyncHandler(async (req, res, next) => {
+    const sessionId = getSessionId(req);
     const { couponName } = req.body;
     // Checks if the cart exists
     const cart = await CartModel.findOne({ user: req.user._id });
@@ -202,6 +255,12 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
     cart.totalPriceAfterDiscount = cart.totalCartPrice - discountAmount;
 
     await cart.save();
+
+    // Delete cache after coupon applied
+    await deleteCartCache(sessionId)
+
+    // Update cache
+    await updateCartCache(sessionId, cart);
 
     res.status(200).json({
         status: 'success',

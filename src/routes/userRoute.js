@@ -27,6 +27,7 @@ const {
 } = require('../services/userService');
 
 const routeProtector = require('../middlewares/routeProtector');
+const rateLimiter = require('../middlewares/rateLimiter');
 const router = express.Router();
 
 
@@ -35,6 +36,7 @@ router.get('/getMe', routeProtector.protect, getLoggedUserData);
 
 router.put(
     '/changeMyPassword', 
+    rateLimiter,
     routeProtector.protect, 
     changeLoggedUserPasswordValidator, 
     changeLoggedUserPassword
@@ -49,8 +51,8 @@ router.put(
     updateLoggedUserData
 );
 
-router.delete('/deactivateMe', routeProtector.protect, deactivateLoggedUser);
-router.patch('/reactivateMe', routeProtector.protect, reactiveLoggedUser);
+router.delete('/deactivateMe', rateLimiter, routeProtector.protect, deactivateLoggedUser);
+router.patch('/reactivateMe', rateLimiter, routeProtector.protect, reactiveLoggedUser);
 
 //Admin Only
 router.use(routeProtector.protect, routeProtector.allowedTo('admin'));
@@ -78,6 +80,7 @@ router
 
 router.put(
     '/changePassword/:id', 
+    rateLimiter,
     changeUserPasswordValidator, 
     changeUserPassword
 );

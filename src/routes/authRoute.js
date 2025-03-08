@@ -17,16 +17,17 @@ const {
     resetPassword
 } = require('../services/authService')
 
-const router = express.Router();
 const routeProtector = require('../middlewares/routeProtector');
+const rateLimiter = require('../middlewares/rateLimiter');
+const router = express.Router();
 
 
-router.post('/signup', signupValidator, signup);
-router.post('/login', loginValidator, login);
-router.post('/forgotPassword', forgotPasswordValidator, forgotPassword);
+router.post('/signup', rateLimiter, signupValidator, signup);
+router.post('/login', rateLimiter, loginValidator, login);
+router.post('/forgotPassword', rateLimiter, forgotPasswordValidator, forgotPassword);
 router.post('/verifyResetCode', verifyPasswordResetCode);
-router.post('/refresh-token', refreshToken);
+router.post('/refresh-token', rateLimiter, refreshToken);
 router.post('/logout', routeProtector.protect, logout);
-router.put('/resetPassword', resetPasswordValidator, resetPassword);    
+router.put('/resetPassword', rateLimiter, resetPasswordValidator, resetPassword);    
 
 module.exports = router;

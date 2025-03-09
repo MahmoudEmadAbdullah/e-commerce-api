@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const express = require('express');
 const dotenv = require('dotenv');
@@ -10,6 +11,8 @@ const { connectRedis } = require('./src/config/redisConfig');
 const ApiError = require('./src/utils/apiError');
 const globalError = require('./src/middlewares/errorMiddleware');
 const dbConnection = require('./DB/database');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = JSON.parse(fs.readFileSync(path.join(__dirname, 'swagger.json'), 'utf8'));
 
 //Routes
 const mountRoute = require('./src/routes/index');
@@ -36,6 +39,15 @@ if(process.env.NODE_ENV === 'development') {
     app.use(morgan("dev"));
     console.log(`mode: ${process.env.NODE_ENV}`);
 };
+
+
+// Define a basic welcome route
+app.get('/', (req, res) => {
+    res.send("Welcome to My E-Commerce API!");
+});
+
+// Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 //Mount Routes
 mountRoute(app);

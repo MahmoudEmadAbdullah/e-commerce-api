@@ -1,0 +1,222 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "E-Commerce API",
+        "version": "1.0.0",
+        "description": "API documentation for the E-Commerce project"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:4000",
+            "description": "Local Server"
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "tags": ["General"],
+                "summary": "Welcome endpoint",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/auth/signup": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Signup new user",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Login a user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/auth/forgotPassword": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Forgot password",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/auth/verifyResetCode": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Verify reset code",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/auth/resetPassword": {
+            "put": {
+                "tags": ["Authentication"],
+                "summary": "Reset password",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/auth/refresh-token": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Refresh Token",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users": {
+            "post": {
+                "tags": ["User"],
+                "summary": "Create a new user (admin)",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            },
+            "get": {
+                "tags": ["User"],
+                "summary": "Get all users (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "tags": ["User"],
+                "summary": "Get specific user (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "put": {
+                "tags": ["User"],
+                "summary": "Update specific user (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["User"],
+                "summary": "Delete specific user (admin)",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                }
+            }
+        },
+        "/api/users/changePassword/{id}": {
+            "put": {
+                "tags": ["User"],
+                "summary": "Change user password (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users/getMe": {
+            "get": {
+                "tags": ["User"],
+                "summary": "Get logged user data",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users/changeMyPassword": {
+            "put": {
+                "tags": ["User"],
+                "summary": "Change logged user password",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users/updateMe": {
+            "put": {
+                "tags": ["User"],
+                "summary": "Update logged user data",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users/deactivateMe": {
+            "delete": {
+                "tags": ["User"],
+                "summary": "Deactivate logged user account",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/users/reactivateMe": {
+            "patch": {
+                "tags": ["User"],
+                "summary": "Reactive logged user account",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+
+        
+
+    }
+}

@@ -6,6 +6,7 @@ exports.setFilterObject = (req, res, next) => {
     let filterObject = {};
     if(req.params.categoryId) filterObject = { category: req.params.categoryId };
     if(req.params.productId) filterObject = { product: req.params.productId};
+    if(req.user.role === 'user') filterObject = { user: req.user._id };
     req.filterObj = filterObject;
     next();
 };

@@ -43,6 +43,9 @@ const cartSchema = new mongoose.Schema(
     {timestamps: true}
 );
 
+// Calculate total order price automatically (with discount)
+
+
 
 //Create model
 const CartModel = mongoose.model('Cart', cartSchema);

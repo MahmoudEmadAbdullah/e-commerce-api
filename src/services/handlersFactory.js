@@ -36,7 +36,7 @@ exports.getDocument = (Model, populateOpt, useCache=false) =>
         }
 
         try {
-                    //Build query
+        //Build query
         let query = Model.findById(id);
         if(populateOpt){
             query = query.populate(populateOpt);

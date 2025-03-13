@@ -140,6 +140,22 @@ exports.deleteDocument = (Model, useCache = false) =>
             return next(new ApiError('No document found', 404));
         }
 
+        // Special logic for UserModel to prevent admin from deleting themselves or last admin
+        if(Model.modelName === 'User') {
+            if(document.role === 'admin') {
+                // Get number of admins in the system
+                const adminCount = await Model.countDocuments({ role: 'admin' });
+                // Prevent deleting the last admin
+                if(adminCount === 1) {
+                    return next(new ApiError('Cannot delete the last admin', 400));
+                }
+                // Prevent admin from deleting themselves
+                if(req.user._id.toString() === id.toString()) {
+                    return next(new ApiError('Admin cannot delete themselves', 403));
+                }
+            }
+        }
+
         if(useCache) {
             setImmediate(async () => {
                 try {

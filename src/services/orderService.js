@@ -1,3 +1,4 @@
+const stripe = require('stripe')(process.env.STRIPE_SECRET);
 const asyncHandler = require('express-async-handler');
 
 const factoryHandler = require('./handlersFactory');
@@ -11,7 +12,7 @@ const { default: mongoose } = require('mongoose');
 
 /**
  * @desc      Create cash order
- * @route     POST /api/orders/cartId
+ * @route     POST /api/orders/:cartId
  * @access    private/protect/user
  */
 exports.createCashOrder = asyncHandler(async (req, res, next) => {
@@ -39,7 +40,8 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
         }
 
         // 3- Get order price depend on cart price "check if coupon applied"
-        const { taxprice=0, shippingprice=0, shippingAddress } = req.body;
+        let taxprice = 0; 
+        let shippingprice = 0; 
         const cartPrice = cart.totalPriceAfterDiscount || cart.totalCartPrice;
         const totalOrderPrice = cartPrice + taxprice + shippingprice;
 
@@ -49,7 +51,7 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
             cartItems: cart.cartItems,
             taxprice,
             shippingprice,
-            shippingAddress,
+            shippingAddress: req.body.shippingAddress,
             totalOrderPrice,
             paymentMethodType: 'cash'
         }], {session});
@@ -173,3 +175,147 @@ exports.updateOrderTDelivered = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({status: "Success", data: order});
 });
+
+
+
+/**
+ * @desc      Get Checkout session from stripe and send it as response 
+ * @route     GET /api/orders/checkout-session
+ * @access    private/protect/user
+ */
+exports.checkoutSession = asyncHandler(async (req, res, next) => {
+    // 1- Get cart depend on loged user
+    const cart = await CartModel.findOne({ user: req.user._id });
+    if(!cart) {
+        return next(new ApiError(`Cart not found`, 404));
+    }
+
+    // 2- Validate stock availability for each product
+    for(item of cart.cartItems) {
+        const product = await ProductModel.findById(item.product);
+        if(!product || product.quantity < item.quantity) {
+            const errorMessage = product 
+                ? `Not enough stock for ${product.name}. Available: ${product.quantity}`
+                : 'Product not found';
+            return next(new ApiError(errorMessage, 400));
+        }
+    }
+
+    // 3- Get order price depend on cart price "check if coupon applied"
+    let taxprice = 0;
+    let shippingprice = 0;
+    const cartPrice = cart.totalPriceAfterDiscount || cart.totalCartPrice;
+    const totalOrderPrice = cartPrice + taxprice + shippingprice;
+
+    // 4- create stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+        line_items: [
+            {
+                price_data: {
+                    currency: 'egp',
+                    product_data: {
+                        name: `Order from ${req.user.name}`,
+                    },
+                    unit_amount: totalOrderPrice * 100,
+                },
+                quantity: 1
+            }
+        ],
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/api/orders`,
+        cancel_url: `${req.protocol}://${req.get('host')}/api/cart`,
+        customer_email: req.user.email,
+        client_reference_id: cart._id.toString(),
+        metadata: {
+            userId: req.user._id.toString(),
+            shippingAddress: JSON.stringify(req.body.shippingAddress)
+        }
+    });
+
+    // 5- Send session to response
+    res.status(200).json({status: 'Success', session});
+});
+
+
+/**
+ * @desc      Function to create online order
+ */
+const createOnlineOrder = asyncHandler(async (session) => {
+    const userId = session.metadata.userId;
+    const cartId = session.client_reference_id;
+    const orderPrice = session.amount_total / 100;
+    const shippingAddress = JSON.parse(session.metadata.shippingAddress);
+
+    const cart = await CartModel.findById(cartId);
+
+    const order = await OrderModel.create({
+        user: userId,
+        cartItems: cart.cartItems,
+        shippingAddress,
+        totalOrderPrice: orderPrice,
+        isPaid: true,
+        paidAt: Date.now(),
+        paymentMethodType: 'card',
+    });
+
+    if(order) {
+        const bulkOption = cart.cartItems.map((item) => ({
+            updateOne: {
+                filter: { _id: item.product },
+                update: { $inc: { quantity: -item.quantity, sold: +item.quantity } }
+            }
+        }));
+        await ProductModel.bulkWrite(bulkOption, {});
+    }
+
+    // Delete product from cahce
+    try {
+        await Promise.all(
+            cart.cartItems.map(async (item) => {
+                const productKeyPattern = `doc:${ProductModel.collection.name}:${item.product.toString()}:*`
+                await deleteCacheKeys(productKeyPattern);
+            })  
+        );
+    } catch(error) {
+        console.error(`Failed to delete product cache: ${error.message}`);
+    }
+
+    // Delete cart from cache
+    try{
+        const cacheKey = `cart:${userId}`;
+        await deleteCartCache(cacheKey);
+    } catch(error) {
+        console.error(`Failed to delete cart cache: ${error.message}`);
+    }
+
+    await CartModel.findByIdAndDelete(cartId);
+});
+
+
+/**
+ * @desc      Handle Stripe webhook for checkout session completion
+ * @route     POST /webhook-checkout
+ * @access    public
+ */
+exports.webhookCheckout = asyncHandler(async (req, res, next) => {
+    const sig = req.headers['stripe-signature'];
+
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
+    } catch(err) {
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    if(event.type === 'checkout.session.completed') {
+        createOnlineOrder(event.data.object);
+    }
+
+    res.status(200).json({ received: true });
+});
+

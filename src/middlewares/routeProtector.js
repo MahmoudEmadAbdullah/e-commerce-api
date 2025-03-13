@@ -36,6 +36,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
             new ApiError('Your account is deactivated. Reactivate it to proceed.', 401)
         );
     }
+
     //4- check if user change his password after token created
     if(currentUser.passwordChangedAt) {
         const passwordChangedTimestamp = parseInt(

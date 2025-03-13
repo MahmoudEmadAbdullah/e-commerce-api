@@ -4,6 +4,7 @@ const fs = require('fs');
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 dotenv.config({path: './config.env'});
@@ -16,6 +17,7 @@ const swaggerDocument = JSON.parse(fs.readFileSync(path.join(__dirname, 'swagger
 
 //Routes
 const mountRoute = require('./src/routes/index');
+const { webhookCheckout } = require('./src/services/orderService');
 
 
 //Cnnect with db
@@ -29,11 +31,21 @@ const app = express();
     await connectRedis();
 })();
 
+
+// Webhook
+app.post(
+    '/webhook-checkout',
+    express.raw({ type: 'application/json' }),
+    webhookCheckout
+);
+
+
 //Middlewares
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'uploads')));
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(cors());
 
 if(process.env.NODE_ENV === 'development') {
     app.use(morgan("dev"));
@@ -41,16 +53,17 @@ if(process.env.NODE_ENV === 'development') {
 };
 
 
-// Define a basic welcome route
-app.get('/', (req, res) => {
-    res.send("Welcome to My E-Commerce API!");
-});
-
 // Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 //Mount Routes
 mountRoute(app);
+
+// Define a basic welcome route
+app.get('/', (req, res) => {
+    res.send("Welcome to My E-Commerce API!");
+});
+
 
 app.all('*', (req, res, next) => {
     next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));

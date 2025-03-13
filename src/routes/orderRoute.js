@@ -10,13 +10,15 @@ const {
     getOrders,
     getOrder,
     updateOrderTopaid,
-    updateOrderTDelivered
+    updateOrderTDelivered,
+    checkoutSession,
 } = require('../services/orderService');
 
 const routeProtector = require('../middlewares/routeProtector');
 const rateLimiter = require('../middlewares/rateLimiter');
 const { setFilterObject } = require('../middlewares/setFilterObject');
 const router = express.Router();
+
 
 
 router.use(routeProtector.protect);
@@ -40,6 +42,12 @@ router.put('/:orderId/deliver',
     orderIdValidator, 
     updateOrderTDelivered
 );
+
+router.get('/checkout-session',
+    routeProtector.allowedTo('user'),
+    rateLimiter,
+    checkoutSession
+);  
 
 router.use(routeProtector.allowedTo('admin', 'user'));
 router.get('/', 

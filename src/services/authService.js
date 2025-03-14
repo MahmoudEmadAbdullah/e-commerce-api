@@ -141,7 +141,6 @@ exports.refreshToken = asyncHandler(async (req, res, next) => {
     if(!refreshToken) {
         return next(new ApiError('Refresh token is required', 401));
     }
-
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
     // Verify that the Refresh Token exists in Redis
@@ -163,7 +162,6 @@ exports.refreshToken = asyncHandler(async (req, res, next) => {
     } catch(error) {
         return next(new ApiError('Server error while validating refresh token', 500));
     }
-
 });
 
 
@@ -288,7 +286,6 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
     // 4- Generate new tokens
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
-
 
     // 5- Store Refresh Token in Cahe
     try {

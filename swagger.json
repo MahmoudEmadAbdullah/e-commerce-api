@@ -15,7 +15,7 @@
         "/": {
             "get": {
                 "tags": ["General"],
-                "summary": "Welcome endpoint",
+                "summary": "root endpoint",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -30,6 +30,17 @@
                 "responses": {
                     "201": {
                         "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/auth/verifyEmail": {
+            "post": {
+                "tags": ["Authentication"],
+                "summary": "Verify Email",
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -510,10 +521,244 @@
                     }
                 }
             }
+        },
+        "/api/wishlist": {
+            "post": {
+                "tags": ["Wishlist"],
+                "summary": "Add product to wishlist",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "get": {
+                "tags": ["Wishlist"],
+                "summary": "Get Loggeg User Wishlist",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/wishlist/:{productId}": {
+            "delete": {
+                "tags": ["Wishlist"],
+                "summary": "Remove product from wishlist",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                }
+            }
+        },
+        "/api/addresses": {
+            "post": {
+                "tags": ["Addresses"],
+                "summary": "Add address to addresses list",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "get": {
+                "tags": ["Addresses"],
+                "summary": "Get Logged User Addresses",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/addresses/:{addressId}": {
+            "delete": {
+                "tags": ["Addresses"],
+                "summary": "Remove address form addresses list",
+                "responses": {
+                    "204": {
+                        "description":"No content"
+                    }
+                }
+            }
+        },
+        "/api/coupons": {
+            "post": {
+                "tags": ["Coupons"],
+                "summary": "Create a coupon (admin)",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            },
+            "get": {
+                "tags": ["Coupons"],
+                "summary": "Get all coupons (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/coupons/:{couponId}": {
+            "get": {
+                "tags": ["Coupons"],
+                "summary": "Get specific coupon (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "put": {
+                "tags": ["Coupons"],
+                "summary": "Update specific coupon (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Coupons"],
+                "summary": "Delete specific coupon (admin)",
+                "responses": {
+                    "204": {
+                        "description":"No content"
+                    }
+                }
+            }
+        },
+        "/api/cart": {
+            "post": {
+                "tags": ["Cart"],
+                "summary": "Add product to cart",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "get": {
+                "tags": ["Cart"],
+                "summary": "Get logged user cart",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["Cart"],
+                "summary": "Clear cart",
+                "responses": {
+                    "204": {
+                        "description":"No content"
+                    }
+                }
+            }
+        },
+        "/api/cart/:{itemId}": {
+            "delete": {
+                "tags": ["Cart"],
+                "summary": "Delete item from cart",
+                "responses": {
+                    "204": {
+                        "description":"No content"
+                    }
+                }
+            },
+            "put": {
+                "tags": ["Cart"],
+                "summary": "Update cart item quantity",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/cart/applyCoupon": {
+            "post": {
+                "tags": ["Cart"],
+                "summary": "Apply coupo on cart",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/orders/:{cartId}": {
+            "post": {
+                "tags": ["Orders"],
+                "summary": "Create cash order",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/orders": {
+            "get": {
+                "tags": ["Orders"],
+                "summary": "Get all orders (admin, user)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/orders/:{orderId}": {
+            "get": {
+                "tags": ["Orders"],
+                "summary": "Get specific order (admin, user)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/orders/:{orderId}/pay": {
+            "put": {
+                "tags": ["Orders"],
+                "summary": "Update order to paid (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/orders/:{orderId}/deliver": {
+            "put": {
+                "tags": ["Orders"],
+                "summary": "Update order to delivered (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/orders/checkout-session": {
+            "get": {
+                "tags": ["Orders"],
+                "summary": "Get stripe checkout session",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
-        
-    
-
 
     }
 }

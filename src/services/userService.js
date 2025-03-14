@@ -124,7 +124,7 @@ exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
         console.error('Cache Retrieval Error:', cacheError);
     }
 
-    const user = await UserModel.findById(req.user._id).select('-password');
+    const user = await UserModel.findById(req.user._id).select('name email phone');
 
     try {
         await client.set(userCacheKey, JSON.stringify(user), { EX: 60 * 15 });
@@ -151,7 +151,7 @@ exports.changeLoggedUserPassword = asyncHandler(async (req, res) => {
             passwordChangedAt: Date.now(),
         },
         {new: true, runValidators: true}
-    );
+    ).select('_id');
     // Generate new tokens
     const accessToken = generateAccessToken(user._id.toString());
     const refreshToken = generateRefreshToken(user._id.toString());
@@ -199,7 +199,7 @@ exports.updateLoggedUserData = asyncHandler(async (req, res) => {
             profileImage: req.body.profileImage
         },
         {new: true, runValidators: true}
-    );
+    ).select('name email phone profileImage');
 
     setImmediate(async () => {
         try {
@@ -220,7 +220,7 @@ exports.updateLoggedUserData = asyncHandler(async (req, res) => {
  * @access    private/protect/user
  */
 exports.deactivateLoggedUser  = asyncHandler(async (req, res) => {
-    await UserModel.findByIdAndUpdate(req.user._id, { active: false });
+    await UserModel.findByIdAndUpdate(req.user._id, { active: false }).select('_id');
 
     try {
         // Delete logged user data from cache
@@ -259,7 +259,7 @@ exports.reactiveLoggedUser = asyncHandler(async (req, res, next) => {
         req.user._id,
         { active: true },
         {new: true}
-    ).select('-password');
+    ).select('name email phone');
 
     try {
         const userCacheKey = `user:${req.user._id}`;

@@ -89,7 +89,7 @@ exports.verifyEmail = asyncHandler(async (req, res, next) => {
 exports.login = asyncHandler(async (req, res, next) => {
     // 1- Verify the user
     const { email, password } = req.body;
-    const user = await UserModel.findOne({email});
+    const user = await UserModel.findOne({email}).select('password email name');
     if(!user || !(await bcrypt.compare(password, user.password))){
         return next(new ApiError(`Invalid email or password`, 401));
     }
@@ -198,7 +198,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
  */
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
     //1- Get user by email
-    const user = await UserModel.findOne({email: req.body.email});
+    const user = await UserModel.findOne({email: req.body.email}).select('email name');
     if(!user) {
         return next(new ApiError(`There is no user with that email ${req.body.email}`, 404));
     }
@@ -248,7 +248,8 @@ exports.verifyPasswordResetCode = asyncHandler(async (req, res, next) => {
             passwordResetCode: resetCode_hash, 
             passwordResetExpires: {$gt: Date.now()},
         }
-    );
+    ).select('passwordResetCode passwordResetExpires passwordResetVerified');
+
     if(!user) {
         return next(new ApiError('Reset code invalid or expired', 400));
     }
@@ -267,7 +268,8 @@ exports.verifyPasswordResetCode = asyncHandler(async (req, res, next) => {
  */
 exports.resetPassword = asyncHandler(async (req, res, next) => {
     //1- Get user based on email
-    const user = await UserModel.findOne({email: req.body.email});
+    const user = await UserModel.findOne({email: req.body.email})
+        .select('email password passwordResetCode passwordResetExpires passwordResetVerified');
     if(!user) {
         return next(new ApiError(`There is no user for this email ${req.body.email}`, 400));
     }

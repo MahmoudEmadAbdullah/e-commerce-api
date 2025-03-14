@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const ApiError = require('../utils/apiError');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
-const hashResetCode = require('../utils/hashResetCode');
+const hashEmailCode = require('../utils/hashEmailCode');
 const { client } = require('../config/redisConfig');
 const UserModel = require('../../DB/models/userModel');
 
@@ -16,47 +16,68 @@ const UserModel = require('../../DB/models/userModel');
  * @route     POST /api/auth/signup
  * @access    public
  */
-exports.signup = asyncHandler(async (req, res) => {
-    //1-Create user
+exports.signup = asyncHandler(async (req, res, next) => {
+    const { name, email, password } = req.body;
+    // 1- Generate verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCode_hash = hashEmailCode(verificationCode);
+    // 2- Create user
     const user = await UserModel.create(
         {
-            name: req.body.name,
-            email: req.body.email,
-            password: req.body.password,
+            name,
+            email,
+            password,
+            emailVerificationCode: verificationCode_hash,
+            verificationCodeExpires: Date.now() + 5 * 60 * 1000,
+            emailVerified: false,
         }
     );
 
-    // 2- Update last login time
-    user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
-
-    // 3- Generate token
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-
-    // 4- Store Refresh Token in Cahe
+    // 3- Send verification email
     try {
-        const refreshKey = `refreshToken:${user._id}`;
-        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-        await client.set(refreshKey, hashedRefreshToken, {
-            EX: 7 * 24 * 60 * 60,
+        const message = sendEmail.verificationTemplate(user.name, verificationCode);
+        await sendEmail({
+            email: user.email,
+            subject: 'Verify your email address',
+            message,
         });
     } catch(error) {
-        return next(new ApiError('Session initialization failed', 500));
+        await UserModel.findByIdAndDelete(user._id);
+        return next(new ApiError('Failed to send verification email', 500));
     }
 
-    // 5- Send Cookie and response
-    res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-    
     res.status(201).json({
-        accessToken,
-        user: { id: user._id, name: user.name, email: user.email }
+        message: 'Verification code sent to your email. Please verify within 5 minutes.',
+    });
+});
+
+
+/**
+ * @desc      Verify user email
+ * @route     POST /api/auth/verifyEmail
+ * @access    public
+ */
+exports.verifyEmail = asyncHandler(async (req, res, next) => {
+    // Get user bassed on verification code
+    const verificationCode_hash = hashEmailCode(req.body.verificationCode);
+    const user = await UserModel.findOne( 
+        {
+            emailVerificationCode: verificationCode_hash,
+            verificationCodeExpires: { $gt: Date.now() }
+        }
+    );
+    if(!user) {
+        return next(new ApiError('Verification code invalid or expired', 400));
+    }
+    
+    user.emailVerified = true;
+    user.emailVerificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+        status: 'Success',
+        message: 'Email verified successfully. Please log in to continue.'
     });
 });
 
@@ -187,7 +208,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
     //2- if user exists, Generate hash random 6 digits and save it in db
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const ResetCode_hash = hashResetCode(resetCode);
+    const ResetCode_hash = hashEmailCode(resetCode);
     //Save hashed reset code into db
     user.passwordResetCode = ResetCode_hash;
     // Add expiration time for reset code (5 minutes)
@@ -224,7 +245,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
  */
 exports.verifyPasswordResetCode = asyncHandler(async (req, res, next) => {
     //1- Get user bassed on reset code
-    const ResetCode_hash = hashResetCode(req.body.resetCode);
+    const ResetCode_hash = hashEmailCode(req.body.resetCode);
     const user = await UserModel.findOne(
         { 
             passwordResetCode: ResetCode_hash, 
@@ -257,14 +278,38 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
     if(user.passwordResetVerified === false){
         return next(new ApiError('Reset code not verified', 400));
     }
+    // 3- Update password and reset fields
     user.password = req.body.newPassword;
     user.passwordResetCode = undefined;
     user.passwordResetExpires = undefined;
     user.passwordResetVerified = undefined;
     await user.save();
 
-    //3- Generate new token
-    const token = generateToken(user._id);
+    // 4- Generate new tokens
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
 
-    res.status(200).json({token});
+
+    // 5- Store Refresh Token in Cahe
+    try {
+        const refreshKey = `refreshToken:${user._id}`;
+        await client.del(refreshKey);
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+        await client.set(refreshKey, hashedRefreshToken, {
+            EX: 7 * 24 * 60 * 60,
+        });
+    } catch(error) {
+        return next(new ApiError('Session initialization failed', 500));
+    }
+
+    // Send Cookie and response
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.status(200).json({ accessToken });
 });

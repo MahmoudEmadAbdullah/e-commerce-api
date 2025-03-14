@@ -25,7 +25,7 @@ exports.signupValidator = [
         .custom(async(userEmail) => {
             const user = await UserModel.findOne({email: userEmail});
             if(user) {
-                throw new ApiError(`Email already exists: ${userEmail}`, 400)
+                throw new ApiError(`Email already exists. Please try another one: ${userEmail}`, 400)
             }
             return true;
         }),

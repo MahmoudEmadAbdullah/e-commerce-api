@@ -37,3 +37,11 @@ Enter this code to complete the reset.\n
 Thanks for helping us keep your account secure.\n
 The E-Commerce Team
 `;
+
+
+module.exports.verificationTemplate = (name, code) => `
+Hi ${name},\n
+Your email verification code is: ${code}.\n
+The E-Commerce Team
+`;
+

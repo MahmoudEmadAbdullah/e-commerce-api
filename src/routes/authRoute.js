@@ -9,6 +9,7 @@ const {
 
 const { 
     signup,
+    verifyEmail,
     login,
     refreshToken,
     logout,
@@ -23,6 +24,7 @@ const router = express.Router();
 
 
 router.post('/signup', rateLimiter, signupValidator, signup);
+router.post('/verifyEmail', rateLimiter, verifyEmail);
 router.post('/login', rateLimiter, loginValidator, login);
 router.post('/forgotPassword', rateLimiter, forgotPasswordValidator, forgotPassword);
 router.post('/verifyResetCode', verifyPasswordResetCode);

@@ -29,6 +29,9 @@ const userSchema = new mongoose.Schema(
                 message: 'Please enter a valid email address'
             }
         },
+        emailVerificationCode: String,
+        verificationCodeExpires: Date,
+        emailVerified: Boolean,
         password: {
             type: String,
             required: [true, 'password is required'],

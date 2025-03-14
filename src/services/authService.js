@@ -10,7 +10,6 @@ const { client } = require('../config/redisConfig');
 const UserModel = require('../../DB/models/userModel');
 
 
-
 /**
  * @desc      Signup new user
  * @route     POST /api/auth/signup
@@ -206,9 +205,9 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
     //2- if user exists, Generate hash random 6 digits and save it in db
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const ResetCode_hash = hashEmailCode(resetCode);
+    const resetCode_hash = hashEmailCode(resetCode);
     //Save hashed reset code into db
-    user.passwordResetCode = ResetCode_hash;
+    user.passwordResetCode = resetCode_hash;
     // Add expiration time for reset code (5 minutes)
     user.passwordResetExpires = Date.now() + 5 * 60 * 1000;
     user.passwordResetVerified = false;
@@ -243,10 +242,10 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
  */
 exports.verifyPasswordResetCode = asyncHandler(async (req, res, next) => {
     //1- Get user bassed on reset code
-    const ResetCode_hash = hashEmailCode(req.body.resetCode);
+    const resetCode_hash = hashEmailCode(req.body.resetCode);
     const user = await UserModel.findOne(
         { 
-            passwordResetCode: ResetCode_hash, 
+            passwordResetCode: resetCode_hash, 
             passwordResetExpires: {$gt: Date.now()},
         }
     );

@@ -1,11 +1,10 @@
-const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 const asyncHandler = require('express-async-handler');
 
 const CategoryModel = require('../../DB/models/categoryModel');
 const factoryHandler = require('./handlersFactory');
 const {uploadSingleImage} = require('../middlewares/uploadImage');
-
+const uploadToCloudinary = require('../utils/uploadToCloudinary');
 
 
 /** 
@@ -48,27 +47,23 @@ exports.updateCategory = factoryHandler.updateDocument(CategoryModel, true);
 exports.deleteCategory = factoryHandler.deleteDocument(CategoryModel, true);
 
 
-
 // Upload single image
 exports.uploadCategoryImage = uploadSingleImage('image');
 
 
 // Image processing
 exports.resizeImage = asyncHandler(async (req, res, next) => {
-    const filename = `category-${uuidv4()}-${Date.now()}.jpeg`;
     if (req.file) {
-        await sharp(req.file.buffer)
-            .resize(600, 600)
-            .toFormat('jpeg')
-            .jpeg({ quality: 95 })
-            .toFile(`uploads/categories/${filename}`);
+        const uniqueFilename = `category-${uuidv4()}-${Date.now()}`;
 
-        // Save image into our db
-        req.body.image = filename;
-    }
+        // Upload to Cloudinary
+        const imageUrl = await uploadToCloudinary(req.file.buffer, 'categories', uniqueFilename);
+
+        // Save image URL to db
+        req.body.image = imageUrl;
+    } 
     next();
 });
-
 
 
 

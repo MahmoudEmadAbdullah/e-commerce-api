@@ -1,4 +1,3 @@
-const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcrypt');
@@ -10,6 +9,7 @@ const UserModel = require('../../DB/models/userModel');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
 const { uploadSingleImage } = require('../middlewares/uploadImage');
 const { client } = require('../config/redisConfig');
+const uploadToCloudinary = require('../utils/uploadToCloudinary');
 
 
 /**
@@ -279,18 +279,17 @@ exports.reactiveLoggedUser = asyncHandler(async (req, res, next) => {
 //Upload single image
 exports.uploadUserImage = uploadSingleImage('profileImage');
 
-//Image processing
-exports.resizeUserImage = asyncHandler(async (req, res, next) => {
-    const filename = `user-${uuidv4()}-${Date.now()}.jpeg`;
-    if(req.file) {
-        await sharp(req.file.buffer)
-            .resize(600, 600)
-            .toFormat('jpeg')
-            .jpeg({quality: 95})
-            .toFile(`uploads/users/${filename}`);
 
-        // Save image into our db
-        req.body.profileImage = filename;
-    }
+// Image processing
+exports.resizeUserImage = asyncHandler(async (req, res, next) => {
+    if (req.file) {
+        const uniqueFilename = `user-${uuidv4()}-${Date.now()}`;
+
+        // Upload to Cloudinary
+        const imageUrl = await uploadToCloudinary(req.file.buffer, 'users', uniqueFilename);
+
+        // Save image URL to db
+        req.body.profileImage = imageUrl;
+    } 
     next();
 });

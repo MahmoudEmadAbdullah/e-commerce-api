@@ -106,31 +106,6 @@ userSchema.pre('save', async function(next) {
 });
 
 
-// Function to append the full URL to the image field if it exists
-const setProfileImageUrl = (doc) => {
-    if(doc.profileImage) {
-        const profileImageUrl = `${process.env.BASE_URL}/users/${doc.profileImage}`;
-        doc.profileImage = profileImageUrl;
-    }
-};
-
-/**
- * Post 'init' middleware: Runs after retrieving a document from the database
- * This applies when using findOne, findAll, or update operations
- */
-userSchema.post('init', function(doc) {
-    setProfileImageUrl(doc);
-});
-
-/**
- * Post 'save' middleware: Runs after creating a new document
- * This applies when using create operations
- */
-userSchema.post('save', function(doc){
-    setProfileImageUrl(doc)
-});
-
-
 //Create model
 const UserModel = mongoose.model('User', userSchema);
 

@@ -104,39 +104,6 @@ productSchema.virtual('reviews', {
 });
 
 
-// Function to append the full URL to the image field if it exists
-const setImageURL = (doc) => {
-    if(doc.imageCover) {
-        const imageUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
-        doc.imageCover = imageUrl; // Update the image field with the full URL
-    }
-    if(doc.images){
-        const imagesList = [];
-        doc.images.forEach((image) => {
-            const imageUrl = `${process.env.BASE_URL}/products/${image}`;
-            imagesList.push(imageUrl);
-        });
-        doc.images = imagesList;
-    }
-};
-
-/**
- * Post 'init' middleware: Runs after retrieving a document from the database
- * This applies when using findOne, findAll, or update operations
- */
-productSchema.post('init', function(doc) {
-    setImageURL(doc);
-});
-
-/**
- * Post 'save' middleware: Runs after creating a new document
- * This applies when using create operations
- */
-productSchema.post('save', function(doc) {
-    setImageURL(doc);
-});
-
-
 //Create model
 const ProductModel = mongoose.model('Product', productSchema);
 
